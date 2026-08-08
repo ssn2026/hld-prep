@@ -1,23 +1,37 @@
 """HLD Tracker backend -- run with: python app.py
-Serves the API on http://localhost:8001
+Serves the API + static frontend on http://localhost:8001
 (port 8001, not 8000, so it can run alongside the DSA tracker)
 """
 
 import datetime
 import json
 import sqlite3
+import threading
+import webbrowser
+from pathlib import Path
 from typing import Dict, List, Optional
 
 import uvicorn
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 import db
 import logic
 
+BASE_DIR = Path(__file__).parent
+FRONTEND_DIR = BASE_DIR.parent / "frontend"
+
 db.init_db()
 
 app = FastAPI(title="HLD Tracker")
+app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
+
+
+@app.get("/")
+def index():
+    return FileResponse(FRONTEND_DIR / "index.html")
 
 
 def today() -> str:
@@ -288,5 +302,10 @@ def get_dashboard():
 
 # ----------------------------------------------------------------- main
 
+def _open_browser():
+    webbrowser.open("http://localhost:8001")
+
+
 if __name__ == "__main__":
+    threading.Timer(1.0, _open_browser).start()
     uvicorn.run(app, host="127.0.0.1", port=8001, log_level="info")
