@@ -48,8 +48,8 @@ earlier section rather than leaving it stale):
     stated scale, industry-standard style)
 
 Each system gets a file at `systems/<kebab-case-name>.md` with these 10
-sections as `##` headers, plus YAML frontmatter (schema defined in
-`docs/TRACKER.md`).
+sections as `##` headers, plus YAML frontmatter (schema defined below in
+"File Frontmatter Schema").
 
 ### 2. Learning Mode
 
@@ -72,10 +72,10 @@ don't overwrite the 10-step design).
 ## Type B Concept Notes
 
 Each concept gets a file at `concepts/<kebab-case-name>.md` — freeform
-notes, not a fixed template. Include YAML frontmatter with a
-`linked_systems` list (which Type A systems depend on this concept — derive
-this from the same labels used in the Notion tracker: Redis, Cassandra,
-Kafka, SQL, Database Internals).
+notes, not a fixed template. Include YAML frontmatter (schema defined below
+in "File Frontmatter Schema") with a `linked_systems` list (which Type A
+systems depend on this concept — derive this from the same labels used in
+the Notion tracker: Redis, Cassandra, Kafka, SQL, Database Internals).
 
 Revision to a Type B concept is triggered relationally, not on a timer:
 whenever an Interview or Learning session for a Type A system touches a
@@ -83,6 +83,34 @@ concept, check that concept's file. If it's missing, stale, or the user
 seems unsure, proactively say so — e.g. "Cart's DB section touches SQL
 row-locking — you haven't reviewed that concept file, want to do a quick
 pass before we continue?" Never force this, just surface it.
+
+## File Frontmatter Schema
+
+### systems/*.md (Type A)
+
+```yaml
+---
+service_name: <matches Notion "Service Name">
+grouping: <matches Notion "HLD Grouping", or "ungrouped">
+status: Not Started | Concepts | System Flow | Service Flow | Deep Dive Ready | Interview Ready
+labels: [list, e.g. Redis, cassandra, SQL]
+sections_complete: <0-10>
+last_session: <date or "never">
+notion_url: <url or "TBD">
+---
+```
+
+### concepts/*.md (Type B)
+
+```yaml
+---
+concept_name: <matches Notion "Service Name" for Concepts-status rows>
+linked_systems: [list of Type A service_names that depend on this]
+last_reviewed: <date or "never">
+freshness: Fresh | Check recommended
+notion_url: <url or "TBD">
+---
+```
 
 ## End-of-Session Pipeline
 
