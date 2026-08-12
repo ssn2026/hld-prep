@@ -49,7 +49,7 @@ Cassandra Based Systems, Social Media, Video Based Systems, (ungrouped)
 | Nearyby friends | Location Based Systems | not created | 0/10 | System Flow | Redis | never | TBD — will add in a follow-up step |
 | Proximity ServiceBase | Location Based Systems | not created | 0/10 | System Flow | SQL | never | TBD — will add in a follow-up step |
 | News Feeds | Social Media | not created | 0/10 | Service Flow | Redis, cassandra | never | TBD — will add in a follow-up step |
-| Chat Systems | Social Media | not created | 0/10 | Service Flow | cassandra, Redis | never | TBD — will add in a follow-up step |
+| Chat Systems | Social Media | systems/chat-systems.md | 10/10 | Deep Dive Ready | cassandra, Redis | 2026-08-12 | TBD — will add in a follow-up step |
 | Whatsapp User Socket info | Social Media | not created | 0/10 | Service Flow | Redis | never | TBD — will add in a follow-up step |
 
 ### Type B — Theory / Concept Notes
