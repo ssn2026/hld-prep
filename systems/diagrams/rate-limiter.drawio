@@ -1,0 +1,91 @@
+<mxfile host="app.diagrams.net" modified="2026-08-12T00:00:00.000Z" agent="hld-prep" version="24.0.0" type="device">
+  <diagram id="page1-check-path" name="1 - Check Path Architecture">
+    <mxGraphModel dx="1200" dy="700" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="900" pageHeight="360" math="0" shadow="0">
+      <root>
+        <mxCell id="0" /><mxCell id="1" parent="0" />
+        <mxCell id="a-caller" value="Calling Service&#10;(any client's API)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="30" y="140" width="170" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="a-limiter" value="Rate Limiter Service" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="280" y="140" width="180" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="a-redis" value="Redis&#10;config cache + counter/bucket state" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="560" y="40" width="220" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="a-sql" value="SQL&#10;clients, rate_limit_rules" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="580" y="220" width="180" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="a-e1" value="POST /v1/check" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=block;endArrow=block;" edge="1" parent="1" source="a-caller" target="a-limiter">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a-e2" value="auth + rule lookup, run Lua script" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=block;endArrow=block;" edge="1" parent="1" source="a-limiter" target="a-redis">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a-e3" value="on cache miss (rare): SELECT client / rules" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=block;endArrow=block;" edge="1" parent="1" source="a-limiter" target="a-sql">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a-note" value="Almost every check is answered entirely by Redis. SQL is only touched on a cold cache miss, and to repopulate the cache afterward." style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;fontSize=12;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="30" y="260" width="480" height="50" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <diagram id="page2-config-write" name="2 - Admin Config Write and Cache Invalidation">
+    <mxGraphModel dx="1200" dy="700" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1020" pageHeight="320" math="0" shadow="0">
+      <root>
+        <mxCell id="0" /><mxCell id="1" parent="0" />
+        <mxCell id="b-admin" value="Admin / Dashboard" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="30" y="130" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="b-api" value="Rate Limiter&#10;Admin API" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="250" y="130" width="170" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="b-sql" value="SQL&#10;rate_limit_rules" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="480" y="30" width="160" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="b-pubsub" value="Redis Pub/Sub&#10;invalidation channel" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="480" y="200" width="180" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="b-instances" value="Rate Limiter instances&#10;(the whole fleet)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="740" y="195" width="220" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="b-e1" value="create / update rule" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=block;endArrow=block;" edge="1" parent="1" source="b-admin" target="b-api">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="b-e2" value="INSERT / UPDATE" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=block;endArrow=block;" edge="1" parent="1" source="b-api" target="b-sql">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="b-e3" value="publish invalidation" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;dashed=1;" edge="1" parent="1" source="b-api" target="b-pubsub">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="b-e4" value="notify every instance" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;dashed=1;" edge="1" parent="1" source="b-pubsub" target="b-instances">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <diagram id="page3-rule-lifecycle" name="3 - Rule Lifecycle">
+    <mxGraphModel dx="1200" dy="700" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="700" pageHeight="200" math="0" shadow="0">
+      <root>
+        <mxCell id="0" /><mxCell id="1" parent="0" />
+        <mxCell id="c-active" value="ACTIVE" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="40" y="70" width="150" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="c-disabled" value="DISABLED" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fbebd2;strokeColor=#a86a08;" vertex="1" parent="1">
+          <mxGeometry x="280" y="70" width="150" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="c-deleted" value="DELETED" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="520" y="70" width="150" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="c-e1" value="admin disables" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;exitY=0.3;entryY=0.3;" edge="1" parent="1" source="c-active" target="c-disabled">
+          <mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="c-e2" value="admin re-enables" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;exitY=0.7;entryY=0.7;" edge="1" parent="1" source="c-disabled" target="c-active">
+          <mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="c-e3" value="admin deletes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" edge="1" parent="1" source="c-disabled" target="c-deleted">
+          <mxGeometry relative="1" as="geometry" /></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

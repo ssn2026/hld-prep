@@ -8,6 +8,14 @@ last_session: 2026-08-12
 notion_url: TBD
 ---
 
+**Diagram:** `systems/diagrams/rate-limiter.drawio` (page 1: check-path
+architecture; page 2: admin config write + cache invalidation; page 3:
+rule lifecycle)
+
+**Interactive trace:** `systems/implementations/rate-limiter-trace.html`
+— cold-cache start, a burst that drains a token bucket, a 429, and the
+fail-open/fail-closed fork if Redis goes down
+
 ## 1. Requirement Gathering
 
 **Functional**
@@ -342,6 +350,6 @@ onboarded clients.
 
 ## Implementation Notes
 
-_(none yet — see `/implementation` for focused deep dives, e.g. the
-token-bucket Lua script under load, or the config cache-invalidation
-pub/sub wiring)_
+_(none yet beyond the interactive trace linked above — see
+`/implementation` for further deep dives, e.g. the token-bucket Lua
+script under load, or the config cache-invalidation pub/sub wiring)_
