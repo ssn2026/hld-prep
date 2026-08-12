@@ -25,7 +25,7 @@ Cassandra Based Systems, Social Media, Video Based Systems, (ungrouped)
 | Netfilx | Video Based Systems | systems/netfilx.md | 10/10 | Deep Dive Ready | SQL, cassandra | 2026-08-12 | TBD — will add in a follow-up step |
 | Broadcasting System | Video Based Systems | systems/broadcasting-system.md | 10/10 | Deep Dive Ready | Redis, cassandra | 2026-08-12 | TBD — will add in a follow-up step |
 | Zoom | Video Based Systems | systems/zoom.md | 10/10 | Deep Dive Ready | SQL | 2026-08-12 | TBD — will add in a follow-up step |
-| Youtube | Video Based Systems | not created | 0/10 | Not Started | - | never | TBD — will add in a follow-up step |
+| Youtube | Video Based Systems | systems/youtube.md | 10/10 | Deep Dive Ready | SQL, cassandra | 2026-08-12 | TBD — will add in a follow-up step |
 | Movie Ticket Booking | Booking System | systems/movie-ticket-booking.md | 10/10 | Deep Dive Ready | SQL, Redis | 2026-08-12 | TBD — will add in a follow-up step |
 | Click Event Aggregator | (ungrouped) | not created | 0/10 | Not Started | - | never | TBD — will add in a follow-up step |
 | Stock Broker | (ungrouped) | not created | 0/10 | Not Started | - | never | TBD — will add in a follow-up step |
