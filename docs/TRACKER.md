@@ -45,7 +45,7 @@ Cassandra Based Systems, Social Media, Video Based Systems, (ungrouped)
 | Key Value StoreBa | Simple Cassandra Based Systems | not created | 0/10 | Service Flow | cassandra | never | TBD — will add in a follow-up step |
 | Unique Id Generator | Simple Cassandra Based Systems | not created | 0/10 | Service Flow | cassandra | never | TBD — will add in a follow-up step |
 | URL Shortner | Simple Cassandra Based Systems | not created | 0/10 | Service Flow | cassandra | never | TBD — will add in a follow-up step |
-| Uber find nearby driver | Location Based Systems | not created | 0/10 | System Flow | cassandra | never | TBD — will add in a follow-up step |
+| Uber find nearby driver | Location Based Systems | systems/uber-find-nearby-driver.md | 10/10 | Deep Dive Ready | cassandra, Redis | 2026-08-12 | TBD — will add in a follow-up step |
 | Nearyby friends | Location Based Systems | not created | 0/10 | System Flow | Redis | never | TBD — will add in a follow-up step |
 | Proximity ServiceBase | Location Based Systems | not created | 0/10 | System Flow | SQL | never | TBD — will add in a follow-up step |
 | News Feeds | Social Media | not created | 0/10 | Service Flow | Redis, cassandra | never | TBD — will add in a follow-up step |
