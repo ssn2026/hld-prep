@@ -42,20 +42,30 @@ logic, catalog/search.
 ### Service Architecture
 
 **Diagram:** `systems/diagrams/amazon-order-management-system.drawio`
-(pages 1–2: sync checkout architecture, async payment/Kafka event flow)
+(page 1: full production topology — edge layer through services and
+Kafka; page 2: async payment/Kafka event flow in detail)
 
-This is not one monolith — it's three services, each with its own
-database, coordinated by a saga:
+**Edge layer** (shared infrastructure, not owned by Order Management):
+every client request hits a **Load Balancer** (L7) → **API Gateway**
+(routing, rate limiting, request validation), which calls the
+**Authentication Service** to validate the caller's token/session before
+forwarding anything to Order Service. None of the three domain services
+are directly internet-facing.
 
-- **Order Service** — owns `orders` / `order_items`. Acts as the
-  **orchestrator** for checkout; the client only ever talks to this
-  service.
-- **Inventory Service** — owns `inventory` / `inventory_reservations`.
-  Exposes a synchronous reserve call, and separately consumes events to
-  finalize or release a hold.
-- **Payment Service** — owns `payment_intents`. Talks to an external
-  payment gateway, hands back a hosted payment link, receives the
-  gateway's completion webhook, and publishes the outcome to Kafka.
+Behind that edge layer, this is not one monolith — it's three services,
+each with its own **PostgreSQL** database, coordinated by a saga:
+
+- **Order Service** — owns `orders` / `order_items` in **Orders DB
+  (PostgreSQL)**, sharded by `user_id`. Acts as the **orchestrator** for
+  checkout; the client only ever talks to this service (via the gateway).
+- **Inventory Service** — owns `inventory` / `inventory_reservations` in
+  **Inventory DB (PostgreSQL)**, sharded by `product_id`. Exposes a
+  synchronous reserve call, and separately consumes events to finalize or
+  release a hold.
+- **Payment Service** — owns `payment_intents` in **Payments DB
+  (PostgreSQL)**. Talks to an external payment gateway, hands back a
+  hosted payment link, receives the gateway's completion webhook, and
+  publishes the outcome to Kafka.
 
 Checkout has a **synchronous half** — create order → reserve inventory →
 initiate payment, all inside the client's request/response — and an
@@ -64,11 +74,16 @@ gateway's link; the gateway's webhook lands on Payment Service later,
 which publishes a Kafka event that both Order Service and Inventory
 Service consume to finalize state. The split exists because payment
 completion can't be forced into checkout's request timeout — the
-customer might take minutes to enter card details.
+customer might take minutes to enter card details. Kafka also carries
+`order.lifecycle` events out to Notification/Analytics/Search-index
+consumers, decoupling those from the checkout path entirely.
 
 ```
-Client → Order Service ──(sync)──▶ Inventory Service   [reserve, per item]
-                        ──(sync)──▶ Payment Service     [create payment intent → link]
+Client → LB → API Gateway ⇄ Auth Service (validate token)
+                  │
+                  ▼
+            Order Service ──(sync)──▶ Inventory Service [Inventory DB]  [reserve, per item]
+                            ──(sync)──▶ Payment Service   [Payments DB]  [create payment intent → link]
 Client ◀── order_id + payment link ──
 
 Client ──(out of band)──▶ Payment Gateway ──(webhook)──▶ Payment Service
@@ -76,11 +91,19 @@ Client ──(out of band)──▶ Payment Gateway ──(webhook)──▶ Pay
                                                     publishes │ payment.completed / payment.failed
                                                               ▼
                                                           Kafka topic
-                                                        ┌─────┴─────┐
-                                                        ▼           ▼
-                                                 Order Service  Inventory Service
-                                              (order→CONFIRMED) (commit/release hold)
+                                                   ┌──────────┼──────────┐
+                                                   ▼          ▼          ▼
+                                            Order Service  Inventory   Notification/
+                                            [Orders DB]    Service     Analytics/Search
+                                          (order→CONFIRMED) [Inv DB]   (order.lifecycle)
 ```
+
+**Concepts touched but not yet reviewed:** Authentication (API
+Gateway → Auth Service hop) and Load Balancing are both live in this
+architecture now, and both are still `not created` in
+`docs/TRACKER.md` — worth a `concepts/authentication.md` and
+`concepts/load-balancing.md` pass before the next system that reuses
+this edge layer.
 
 ## 2. Queries in Plain English
 
@@ -143,6 +166,11 @@ reaches `CONFIRMED` once the `payment.completed` event lands. Cancellation
 is only legal while an item is `PENDING` or `RESERVED`.
 
 ## 4. API Endpoints
+
+All client-facing endpoints below are reached as
+`Client → Load Balancer → API Gateway → Order Service`. The gateway
+calls Authentication Service to validate the caller before routing;
+Order Service itself never sees an unauthenticated request.
 
 **Order Service — client-facing**
 | Endpoint | Notes |
@@ -242,17 +270,17 @@ is only legal while an item is `PENDING` or `RESERVED`.
 Database-per-service — each service owns its data outright and is only
 ever reached through its API or its Kafka events, never a shared table:
 
-- **Order Service → SQL (Postgres/MySQL).** `orders` + `order_items` need
-  multi-row transactional writes (an order and its items commit
+- **Order Service → Orders DB (PostgreSQL).** `orders` + `order_items`
+  need multi-row transactional writes (an order and its items commit
   together) and strong consistency on state. Shard by `user_id` or
   `order_id` hash once volume outgrows a single primary.
-- **Inventory Service → SQL**, same durability rationale, with the
-  conditional atomic-update pattern handling hot-row contention. An
-  optional Redis layer can front only the hottest SKUs, reconciled back
-  to SQL asynchronously.
-- **Payment Service → SQL.** `payment_intents` is a small, high-integrity
-  table (financial record of intent → outcome); no different reasoning
-  than the other two.
+- **Inventory Service → Inventory DB (PostgreSQL)**, same durability
+  rationale, with the conditional atomic-update pattern handling
+  hot-row contention. An optional Redis layer can front only the
+  hottest SKUs, reconciled back to SQL asynchronously.
+- **Payment Service → Payments DB (PostgreSQL).** `payment_intents` is a
+  small, high-integrity table (financial record of intent → outcome);
+  no different reasoning than the other two.
 - **Kafka** is the integration backbone between Payment Service and its
   two consumers. It decouples them so that a slow or temporarily-down
   Inventory Service can never block Payment Service from acknowledging
@@ -261,7 +289,7 @@ ever reached through its API or its Kafka events, never a shared table:
 
 ## 7. Database Schema
 
-**Order Service DB**
+**Orders DB (PostgreSQL) — owned by Order Service**
 ```sql
 CREATE TABLE orders (
   order_id           BIGINT PRIMARY KEY,
@@ -309,7 +337,7 @@ CREATE TABLE shipments (
 );
 ```
 
-**Inventory Service DB**
+**Inventory DB (PostgreSQL) — owned by Inventory Service**
 ```sql
 CREATE TABLE inventory (
   product_id     BIGINT PRIMARY KEY,
@@ -331,7 +359,7 @@ CREATE INDEX idx_reservations_order ON inventory_reservations(order_id);
 CREATE INDEX idx_reservations_expiry ON inventory_reservations(status, expires_at);
 ```
 
-**Payment Service DB**
+**Payments DB (PostgreSQL) — owned by Payment Service**
 ```sql
 CREATE TABLE payment_intents (
   payment_intent_id  BIGINT PRIMARY KEY,

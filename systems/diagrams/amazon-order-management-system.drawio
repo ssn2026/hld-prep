@@ -1,51 +1,106 @@
 <mxfile host="app.diagrams.net" modified="2026-08-12T00:00:00.000Z" agent="hld-prep" version="24.0.0" type="device">
-  <diagram id="page1-sync-architecture" name="1 - Sync Checkout Architecture">
-    <mxGraphModel dx="1200" dy="700" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="700" math="0" shadow="0">
+  <diagram id="page1-production-architecture" name="1 - Production Architecture (Edge to Services)">
+    <mxGraphModel dx="1400" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1850" pageHeight="800" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
 
-        <mxCell id="a-client" value="Client" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
-          <mxGeometry x="40" y="260" width="140" height="60" as="geometry" />
+        <mxCell id="p1-client" value="Client&#10;(web / mobile)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="40" y="300" width="140" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="a-order" value="Order Service&#10;(orchestrator)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
-          <mxGeometry x="300" y="260" width="180" height="60" as="geometry" />
+        <mxCell id="p1-lb" value="Load Balancer&#10;(L7)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="240" y="300" width="160" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="a-inventory" value="Inventory Service" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
-          <mxGeometry x="620" y="80" width="180" height="60" as="geometry" />
+        <mxCell id="p1-gw" value="API Gateway&#10;(routing, rate limiting, request validation)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="460" y="290" width="180" height="80" as="geometry" />
         </mxCell>
-        <mxCell id="a-payment" value="Payment Service" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
-          <mxGeometry x="620" y="440" width="180" height="60" as="geometry" />
-        </mxCell>
-
-        <mxCell id="a-e1" value="1. POST /orders&#10;(Idempotency-Key)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;elbow=vertical;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="a-client" target="a-order">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="a-e2" value="2. reserve(items)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;elbow=vertical;exitX=1;exitY=0.3;entryX=0;entryY=0.5;" edge="1" parent="1" source="a-order" target="a-inventory">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="a-e3" value="reserved / out-of-stock" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;elbow=vertical;exitX=0;exitY=0.7;entryX=1;entryY=0.3;dashed=1;" edge="1" parent="1" source="a-inventory" target="a-order">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="a-e4" value="3. create payment intent" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;elbow=vertical;exitX=1;exitY=0.7;entryX=0;entryY=0.5;" edge="1" parent="1" source="a-order" target="a-payment">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="a-e5" value="paymentIntentId + paymentLink" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;elbow=vertical;exitX=0;exitY=0.3;entryX=1;entryY=0.7;dashed=1;" edge="1" parent="1" source="a-payment" target="a-order">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="a-e6" value="4. orderId + paymentLink" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;elbow=vertical;exitX=0;exitY=0.5;entryX=1;entryY=0.5;dashed=1;" edge="1" parent="1" source="a-order" target="a-client">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="p1-auth" value="Authentication Service" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="460" y="470" width="180" height="60" as="geometry" />
         </mxCell>
 
-        <mxCell id="a-note" value="Everything on this page happens inside the client&#39;s original checkout request/response. Payment is not captured here — the client is only handed a link." style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;fontSize=12;fontStyle=2;" vertex="1" parent="1">
-          <mxGeometry x="40" y="560" width="640" height="60" as="geometry" />
+        <mxCell id="p1-order" value="Order Service&#10;(orchestrator)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="700" y="290" width="180" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-orddb" value="Orders DB&#10;(PostgreSQL, sharded by user_id)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="720" y="440" width="160" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="p1-inventory" value="Inventory Service" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="980" y="90" width="180" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-invdb" value="Inventory DB&#10;(PostgreSQL, sharded by product_id)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="190" width="160" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="p1-payment" value="Payment Service" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="980" y="500" width="180" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-paydb" value="Payments DB&#10;(PostgreSQL)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="600" width="160" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="p1-kafka" value="Kafka&#10;payment.completed&#10;payment.failed&#10;order.lifecycle" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="1280" y="270" width="220" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-consumers" value="Notification Service&#10;Analytics&#10;Search-index&#10;(async consumers of order.lifecycle)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="1580" y="180" width="220" height="140" as="geometry" />
+        </mxCell>
+
+        <mxCell id="p1-e1" value="HTTPS" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" edge="1" parent="1" source="p1-client" target="p1-lb">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-e2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" edge="1" parent="1" source="p1-lb" target="p1-gw">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-e3" value="validate token / claims" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=block;endArrow=block;" edge="1" parent="1" source="p1-gw" target="p1-auth">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-e4" value="route: POST /orders, GET /orders, ..." style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" edge="1" parent="1" source="p1-gw" target="p1-order">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-e5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;dashed=1;" edge="1" parent="1" source="p1-order" target="p1-orddb">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-e6" value="reserve(items)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" edge="1" parent="1" source="p1-order" target="p1-inventory">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-e7" value="reserved / out-of-stock" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;dashed=1;" edge="1" parent="1" source="p1-inventory" target="p1-order">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-e8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;dashed=1;" edge="1" parent="1" source="p1-inventory" target="p1-invdb">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-e9" value="create payment intent" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" edge="1" parent="1" source="p1-order" target="p1-payment">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-e10" value="paymentLink" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;dashed=1;" edge="1" parent="1" source="p1-payment" target="p1-order">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-e11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;dashed=1;" edge="1" parent="1" source="p1-payment" target="p1-paydb">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-e12" value="publish payment.*" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" edge="1" parent="1" source="p1-payment" target="p1-kafka">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-e13" value="consume payment.*" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" edge="1" parent="1" source="p1-kafka" target="p1-order">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-e14" value="consume payment.*" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" edge="1" parent="1" source="p1-kafka" target="p1-inventory">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-e15" value="consume order.lifecycle" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" edge="1" parent="1" source="p1-kafka" target="p1-consumers">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="p1-note" value="Load Balancer, API Gateway and Authentication Service are shared edge infrastructure (not owned by Order Management). API Gateway calls Auth Service to validate the caller's token/session before routing any request to Order Service." style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;fontSize=12;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="40" y="620" width="620" height="80" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
   </diagram>
 
   <diagram id="page2-async-flow" name="2 - Async Payment and Event Flow">
-    <mxGraphModel dx="1200" dy="700" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="700" math="0" shadow="0">
+    <mxGraphModel dx="1200" dy="700" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1450" pageHeight="650" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -59,40 +114,58 @@
         <mxCell id="b-payment" value="Payment Service" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
           <mxGeometry x="580" y="260" width="180" height="60" as="geometry" />
         </mxCell>
+        <mxCell id="b-paydb" value="Payments DB&#10;(PostgreSQL)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="600" y="350" width="140" height="70" as="geometry" />
+        </mxCell>
         <mxCell id="b-kafka" value="Kafka&#10;payment.completed / payment.failed&#10;(key = order_id)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
           <mxGeometry x="860" y="250" width="220" height="80" as="geometry" />
         </mxCell>
         <mxCell id="b-order" value="Order Service&#10;(consumer)&#10;order -&gt; CONFIRMED" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
-          <mxGeometry x="1160" y="120" width="200" height="70" as="geometry" />
+          <mxGeometry x="1160" y="90" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="b-orddb" value="Orders DB&#10;(PostgreSQL)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="1180" y="180" width="160" height="70" as="geometry" />
         </mxCell>
         <mxCell id="b-inventory" value="Inventory Service&#10;(consumer)&#10;reservation HELD -&gt; COMMITTED / RELEASED" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
           <mxGeometry x="1160" y="380" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="b-invdb" value="Inventory DB&#10;(PostgreSQL)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="1180" y="470" width="160" height="70" as="geometry" />
         </mxCell>
         <mxCell id="b-reaper" value="Reservation-expiry reaper&#10;(HELD past expires_at, no webhook ever arrived)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;dashed=1;" vertex="1" parent="1">
           <mxGeometry x="860" y="420" width="220" height="70" as="geometry" />
         </mxCell>
 
-        <mxCell id="b-e1" value="pays (out of band)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;elbow=vertical;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="b-client" target="b-gateway">
+        <mxCell id="b-e1" value="pays (out of band)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" edge="1" parent="1" source="b-client" target="b-gateway">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="b-e2" value="webhook: payment result" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;elbow=vertical;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="b-gateway" target="b-payment">
+        <mxCell id="b-e2" value="webhook: payment result" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" edge="1" parent="1" source="b-gateway" target="b-payment">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="b-e3" value="publish" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;elbow=vertical;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="b-payment" target="b-kafka">
+        <mxCell id="b-e2b" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;dashed=1;" edge="1" parent="1" source="b-payment" target="b-paydb">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="b-e4" value="consume" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;elbow=vertical;exitX=1;exitY=0.3;entryX=0;entryY=0.5;" edge="1" parent="1" source="b-kafka" target="b-order">
+        <mxCell id="b-e3" value="publish" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" edge="1" parent="1" source="b-payment" target="b-kafka">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="b-e5" value="consume" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;elbow=vertical;exitX=1;exitY=0.7;entryX=0;entryY=0.5;" edge="1" parent="1" source="b-kafka" target="b-inventory">
+        <mxCell id="b-e4" value="consume" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" edge="1" parent="1" source="b-kafka" target="b-order">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="b-e6" value="release + restore available_qty" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;elbow=vertical;dashed=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="b-reaper" target="b-inventory">
+        <mxCell id="b-e4b" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;dashed=1;" edge="1" parent="1" source="b-order" target="b-orddb">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="b-e5" value="consume" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" edge="1" parent="1" source="b-kafka" target="b-inventory">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="b-e5b" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;dashed=1;" edge="1" parent="1" source="b-inventory" target="b-invdb">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="b-e6" value="release + restore available_qty" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;dashed=1;" edge="1" parent="1" source="b-reaper" target="b-inventory">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
 
-        <mxCell id="b-note" value="Both Order Service and Inventory Service consume the SAME event independently off Kafka. Consumers are idempotent by construction: the state-transition WHERE clause (e.g. status = &#39;HELD&#39;) makes redelivery a no-op." style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;fontSize=12;fontStyle=2;" vertex="1" parent="1">
-          <mxGeometry x="40" y="480" width="760" height="60" as="geometry" />
+        <mxCell id="b-note" value="Both Order Service and Inventory Service consume the SAME event independently off Kafka. Consumers are idempotent by construction: the state-transition WHERE clause (e.g. status = 'HELD') makes redelivery a no-op." style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;fontSize=12;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="40" y="500" width="760" height="60" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
