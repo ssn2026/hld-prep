@@ -111,6 +111,27 @@ Skip a page if the system genuinely has nothing for it (e.g. no async
 flow, or step 3 concluded no state machine applies — say so instead of
 drawing an empty page). Reference the diagram file's path from the
 relevant section(s) of the system's `.md` file so it's discoverable
+
+**Production-quality bar** (learned the hard way — the first pass at
+this was rejected as "not production ready"):
+
+- **Group shared edge infrastructure into one box.** Load Balancer, API
+  Gateway, Authentication Service (and similar shared infra that isn't
+  owned by the system being designed) go inside a single labeled
+  container, not scattered as separate top-level boxes.
+- **One edge per relationship, not two.** Never draw a request arrow and
+  a response arrow separately between the same two nodes — that's what
+  causes labels to stack on top of each other. Use a single
+  double-headed arrow (`startArrow=block;endArrow=block`) with one
+  concise label instead.
+- **Solid = synchronous, dashed = async — and say so.** Every page needs
+  a legend cell explicitly stating the convention. If a page mixes sync
+  and async, split it into separate pages instead (e.g. sync checkout
+  path on one page, async webhook/event-bus fan-out on another) rather
+  than cramming both styles onto one crowded page.
+- **Generous spacing.** No two boxes or labels should be close enough to
+  visually collide. When in doubt, make the page bigger, not the nodes
+  smaller.
 without a separate index. Interview Mode and Implementation Mode do not
 require diagrams unless the user asks.
 
