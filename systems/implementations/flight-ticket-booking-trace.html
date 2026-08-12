@@ -1,0 +1,637 @@
+<title>Overbooking Trace</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<!-- ==================================================================
+     INTERACTIVE TRACE — reusable template
+     ------------------------------------------------------------------
+     See CLAUDE.md -> "Interactive Trace" for the authoring workflow.
+     Everything in this file is generic EXCEPT two blocks, each marked
+     "SYSTEM DATA — edit this" below:
+       1. <div class="page-head"> text + the <svg class="topology"> diagram
+       2. the JS data block (SEED / TABLE_KEYS / STATUS_COLORS / STEPS / BRANCH)
+     Do not touch the CSS or the JS engine functions (render/apply/state) —
+     copy this file, then edit ONLY the marked blocks. If the engine
+     itself needs a fix, fix it here once rather than per-system.
+================================================================== -->
+
+<style>
+  :root {
+    --bg: #eef3f1;
+    --surface: #ffffff;
+    --surface-2: #f4f8f6;
+    --ink: #0f211d;
+    --ink-muted: #51655f;
+    --ink-faint: #8a9c96;
+    --line: #d6e1dd;
+    --line-strong: #b9cac4;
+    --accent: #067a6f;
+    --accent-strong: #045049;
+    --accent-soft: #d3eee8;
+    --ok: #1f8a4c;
+    --ok-soft: #ddf3e4;
+    --warn: #a86a08;
+    --warn-soft: #fbebd2;
+    --bad: #c23b3b;
+    --bad-soft: #fbe0de;
+    --shadow: 0 1px 2px rgba(15, 33, 29, 0.06), 0 8px 24px rgba(15, 33, 29, 0.06);
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    --font-mono: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, Consolas, "Liberation Mono", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #081311; --surface: #0f1e1a; --surface-2: #132923;
+      --ink: #e7f3ef; --ink-muted: #93aca4; --ink-faint: #5c726b;
+      --line: #1e332d; --line-strong: #2b463e;
+      --accent: #35e7c9; --accent-strong: #8ff5e2; --accent-soft: #123832;
+      --ok: #3fcb78; --ok-soft: #123322;
+      --warn: #e0a83a; --warn-soft: #3a2e10;
+      --bad: #e5675f; --bad-soft: #3a1512;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 28px rgba(0, 0, 0, 0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #081311; --surface: #0f1e1a; --surface-2: #132923;
+    --ink: #e7f3ef; --ink-muted: #93aca4; --ink-faint: #5c726b;
+    --line: #1e332d; --line-strong: #2b463e;
+    --accent: #35e7c9; --accent-strong: #8ff5e2; --accent-soft: #123832;
+    --ok: #3fcb78; --ok-soft: #123322;
+    --warn: #e0a83a; --warn-soft: #3a2e10;
+    --bad: #e5675f; --bad-soft: #3a1512;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 28px rgba(0, 0, 0, 0.35);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--ink); font-family: var(--font-sans); font-size: 15px; line-height: 1.5; padding-bottom: 92px; }
+  ::selection { background: var(--accent-soft); color: var(--ink); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+  .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  .page-head { max-width: 1180px; margin: 0 auto; padding: 36px 24px 8px; }
+  .eyebrow { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+  .page-title { font-size: 30px; font-weight: 700; letter-spacing: -0.01em; margin: 6px 0 8px; text-wrap: balance; }
+  .page-sub { color: var(--ink-muted); max-width: 62ch; font-size: 15px; }
+
+  .diagram-wrap { max-width: 1180px; margin: 20px auto 0; padding: 0 24px; }
+  .diagram-card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); padding: 16px 16px 12px; overflow-x: auto; }
+  .diagram-scroll { min-width: 760px; }
+  svg.topology { width: 100%; height: auto; display: block; overflow: visible; }
+  .node rect { fill: var(--surface); stroke: var(--line-strong); stroke-width: 1.5; transition: stroke 0.25s ease, fill 0.25s ease, filter 0.25s ease; }
+  .node text { fill: var(--ink); font-family: var(--font-sans); }
+  .node .node-sub { fill: var(--ink-muted); font-family: var(--font-mono); }
+  .node.muted rect { opacity: 0.55; }
+  .node.muted text { opacity: 0.55; }
+  .node.active rect { stroke: var(--accent); stroke-width: 2.5; fill: var(--accent-soft); filter: drop-shadow(0 0 6px color-mix(in srgb, var(--accent) 55%, transparent)); }
+  .node.active text { fill: var(--ink); opacity: 1; }
+  .node.external rect { fill: var(--surface-2); }
+  .node.external .tag { fill: var(--ink-faint); font-family: var(--font-mono); letter-spacing: 0.08em; }
+  .edgegroup-box { fill: none; stroke: var(--line); stroke-width: 1.25; stroke-dasharray: 4 4; }
+  .edgegroup-box.active { stroke: var(--accent); opacity: 0.8; }
+  .edgegroup-label { fill: var(--ink-faint); font-family: var(--font-mono); letter-spacing: 0.1em; }
+
+  .edge path { fill: none; stroke: currentColor; color: var(--line-strong); stroke-width: 1.5; transition: color 0.25s ease, stroke-width 0.25s ease; }
+  .edge.async path { stroke-dasharray: 6 5; }
+  .edge .edge-label { font-family: var(--font-mono); font-size: 10.5px; fill: var(--ink-faint); }
+  .edge .edge-label-bg { fill: var(--surface); opacity: 0.92; }
+  .edge.active path { color: var(--accent); stroke-width: 2.5; }
+  .edge.active .edge-label { fill: var(--ink); font-weight: 600; }
+  .edge.sync.active path { animation: pulseGlow 1.1s ease-in-out infinite; }
+  .edge.async.active path { animation: dashFlow 0.7s linear infinite; }
+  @keyframes pulseGlow { 0%, 100% { filter: none; } 50% { filter: drop-shadow(0 0 4px color-mix(in srgb, var(--accent) 70%, transparent)); } }
+  @keyframes dashFlow { to { stroke-dashoffset: -22; } }
+  @media (prefers-reduced-motion: reduce) {
+    .edge.active path { animation: none !important; }
+    .node.active rect { filter: none; }
+  }
+
+  .legend-row { display: flex; flex-wrap: wrap; gap: 18px; padding: 10px 4px 2px; font-family: var(--font-mono); font-size: 11.5px; color: var(--ink-muted); }
+  .legend-row .swatch { display: inline-flex; align-items: center; gap: 7px; }
+  .legend-row svg { flex: none; }
+
+  .workspace { max-width: 1180px; margin: 24px auto 0; padding: 0 24px; }
+  .step-card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); padding: 22px 24px 26px; }
+  .step-meta { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .step-eyebrow { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); font-weight: 700; }
+  .step-progress-text { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 12px; color: var(--ink-faint); }
+  .step-title { font-size: 23px; font-weight: 700; letter-spacing: -0.01em; margin: 4px 0 6px; text-wrap: balance; }
+  .step-summary { color: var(--ink-muted); font-size: 14.5px; max-width: 70ch; }
+
+  .bullets { list-style: none; padding: 0; margin: 16px 0 0; display: grid; gap: 7px; }
+  .bullets li { padding-left: 18px; position: relative; font-size: 14px; color: var(--ink); }
+  .bullets li::before { content: ""; position: absolute; left: 2px; top: 8px; width: 5px; height: 5px; border-radius: 50%; background: var(--accent); }
+
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 20px; }
+  @media (max-width: 860px) { .detail-grid { grid-template-columns: 1fr; } }
+  .detail-col { display: grid; gap: 12px; align-content: start; }
+  .panel-label { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 6px; }
+  .code-block { background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; overflow-x: auto; }
+  .code-block pre { margin: 0; font-family: var(--font-mono); font-size: 12.5px; line-height: 1.6; white-space: pre; color: var(--ink); }
+  .empty-note { font-size: 13px; color: var(--ink-faint); font-style: italic; padding: 10px 2px; }
+
+  .db-section { margin-top: 28px; }
+  .db-header { display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+  .db-header h2 { font-size: 15px; margin: 0; letter-spacing: -0.005em; }
+  .db-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+  .db-card { border: 1px solid var(--line); border-radius: 12px; background: var(--surface); overflow: hidden; transition: border-color 0.25s ease, box-shadow 0.25s ease; }
+  .db-card.touched { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .db-card-head { padding: 9px 12px; background: var(--surface-2); border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; }
+  .db-card-head .name { font-family: var(--font-mono); font-size: 12.5px; font-weight: 600; }
+  .db-card-head .count { font-family: var(--font-mono); font-size: 11px; color: var(--ink-faint); }
+  .db-card-body { overflow-x: auto; }
+  table.db-table { border-collapse: collapse; width: 100%; font-family: var(--font-mono); font-size: 11.5px; }
+  table.db-table th, table.db-table td { padding: 6px 10px; text-align: left; white-space: nowrap; border-bottom: 1px solid var(--line); }
+  table.db-table th { color: var(--ink-faint); font-weight: 500; text-transform: lowercase; letter-spacing: 0.02em; }
+  table.db-table tr:last-child td { border-bottom: none; }
+  table.db-table tr.row-touched td { background: var(--accent-soft); }
+  .row-chip { display: inline-block; font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.06em; padding: 1px 5px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
+  .row-chip.new { background: var(--ok-soft); color: var(--ok); }
+  .row-chip.upd { background: var(--warn-soft); color: var(--warn); }
+  .pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+  .pill.ok { background: var(--ok-soft); color: var(--ok); }
+  .pill.warn { background: var(--warn-soft); color: var(--warn); }
+  .pill.bad { background: var(--bad-soft); color: var(--bad); }
+  .pill.neutral { background: var(--surface-2); color: var(--ink-muted); }
+  .db-empty { padding: 16px 12px; font-size: 12px; color: var(--ink-faint); font-style: italic; }
+
+  .intro { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); padding: 40px 32px; text-align: center; }
+  .intro p { color: var(--ink-muted); max-width: 56ch; margin: 10px auto 22px; }
+  .intro h2 { font-size: 20px; margin: 0; }
+
+  .control-bar { position: sticky; bottom: 0; z-index: 20; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(10px); border-top: 1px solid var(--line); margin-top: 30px; }
+  .control-inner { max-width: 1180px; margin: 0 auto; padding: 14px 24px; display: flex; align-items: center; gap: 16px; }
+  .progress-wrap { flex: 1; min-width: 0; }
+  .progress-label { font-family: var(--font-mono); font-size: 11px; color: var(--ink-faint); margin-bottom: 5px; font-variant-numeric: tabular-nums; }
+  .progress-track { height: 4px; border-radius: 2px; background: var(--line); overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.3s ease; }
+  .btn { font-family: var(--font-sans); font-size: 13.5px; font-weight: 600; padding: 10px 18px; border-radius: 9px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); cursor: pointer; transition: transform 0.12s ease, border-color 0.15s ease, background 0.15s ease; white-space: nowrap; }
+  .btn:hover { border-color: var(--accent); }
+  .btn:active { transform: scale(0.97); }
+  .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .btn:disabled:hover { border-color: var(--line-strong); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+  .btn.primary:hover { background: var(--accent-strong); border-color: var(--accent-strong); }
+  .btn.ghost { background: transparent; }
+  .btn.ok-btn { border-color: var(--ok); color: var(--ok); }
+  .btn.ok-btn:hover { background: var(--ok-soft); }
+  .btn.bad-btn { border-color: var(--bad); color: var(--bad); }
+  .btn.bad-btn:hover { background: var(--bad-soft); }
+  .btn.warn-btn { border-color: var(--warn); color: var(--warn); }
+  .btn.warn-btn:hover { background: var(--warn-soft); }
+
+  .branch-actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-top: 22px; }
+  .branch-actions .btn { padding: 13px 22px; font-size: 14px; }
+
+  .outcome-banner { margin-top: 18px; padding: 14px 16px; border-radius: 10px; font-size: 14px; font-weight: 600; }
+  .outcome-banner.ok { background: var(--ok-soft); color: var(--ok); }
+  .outcome-banner.bad { background: var(--bad-soft); color: var(--bad); }
+  .outcome-banner.warn { background: var(--warn-soft); color: var(--warn); }
+
+  @media (max-width: 640px) {
+    .control-inner { flex-wrap: wrap; }
+    .progress-wrap { order: 3; flex-basis: 100%; }
+  }
+</style>
+
+<!-- ================= SYSTEM DATA — edit this: page head text ================= -->
+<div class="page-head">
+  <div class="eyebrow">Flight Ticket Booking &middot; Implementation Mode</div>
+  <h1 class="page-title">Overbooking Trace</h1>
+  <p class="page-sub">
+    Booking Economy is a counter, checking in is a lock — and the gap
+    between those two mechanisms is exactly where an oversold flight's
+    consequences land.
+  </p>
+</div>
+<!-- ================= /SYSTEM DATA ================= -->
+
+<div class="diagram-wrap">
+  <div class="diagram-card">
+    <div class="diagram-scroll">
+      <!-- ================= SYSTEM DATA — edit this: topology diagram =================
+           Reuse the same visual vocabulary everywhere:
+             - each node: <g id="n-..." class="node"> (add "external" for
+               third-party systems, e.g. a payment gateway) containing a
+               <rect> + <text>
+             - group shared edge infra (load balancer / gateway / auth /
+               etc.) into ONE <g class="node"> with an .edgegroup-box rect,
+               per CLAUDE.md's diagram production-quality bar
+             - each edge: <g id="e-..." class="edge sync"> for a
+               synchronous call, or class="edge async" for an
+               event/webhook/queue hop, containing a <path
+               marker-end="url(#arrow)"> (add marker-start too for a
+               double-headed request/response arrow — never draw two
+               separate edges for one relationship)
+           Node/edge ids are auto-discovered from the DOM by the engine
+           below (any element with class "node"/"edge" and an id) — pick
+           whatever ids make sense for this system and reference the same
+           ids from the STEPS data. -->
+      <svg class="topology" viewBox="0 0 900 260" role="img" aria-label="Fare counter and seat lock diagram, updates to highlight the current hop">
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="currentColor" />
+          </marker>
+        </defs>
+
+        <g id="n-client" class="node">
+          <rect x="20" y="100" width="150" height="60" rx="8" />
+          <text x="95" y="134" font-size="12.5" text-anchor="middle" font-weight="600">Passenger</text>
+        </g>
+        <g id="n-service" class="node">
+          <rect x="290" y="100" width="170" height="60" rx="8" />
+          <text x="375" y="134" font-size="12.5" text-anchor="middle" font-weight="600">Booking Service</text>
+        </g>
+        <g id="n-sql" class="node">
+          <rect x="580" y="20" width="240" height="60" rx="8" />
+          <text x="700" y="46" font-size="12.5" text-anchor="middle" font-weight="600">SQL: fare_buckets</text>
+          <text class="node-sub" x="700" y="62" font-size="9.5" text-anchor="middle">counter</text>
+        </g>
+        <g id="n-redis" class="node">
+          <rect x="580" y="160" width="240" height="60" rx="8" />
+          <text x="700" y="186" font-size="12.5" text-anchor="middle" font-weight="600">Redis: seat locks</text>
+          <text class="node-sub" x="700" y="202" font-size="9.5" text-anchor="middle">check-in only</text>
+        </g>
+
+        <g class="edge sync" id="e-client-service">
+          <path d="M170,130 L290,130" marker-end="url(#arrow)" marker-start="url(#arrow)" />
+        </g>
+        <g class="edge sync" id="e-service-sql">
+          <path d="M460,120 L510,120 L510,50 L580,50" marker-end="url(#arrow)" marker-start="url(#arrow)" />
+        </g>
+        <g class="edge sync" id="e-service-redis">
+          <path d="M460,140 L510,140 L510,190 L580,190" marker-end="url(#arrow)" marker-start="url(#arrow)" />
+        </g>
+      </svg>
+      <!-- ================= /SYSTEM DATA ================= -->
+    </div>
+    <div class="legend-row">
+      <span class="swatch"><svg width="26" height="10"><line x1="1" y1="5" x2="25" y2="5" stroke="var(--ink-muted)" stroke-width="2"/></svg>solid = synchronous call</span>
+      <span class="swatch"><svg width="26" height="10"><line x1="1" y1="5" x2="25" y2="5" stroke="var(--ink-muted)" stroke-width="2" stroke-dasharray="4 3"/></svg>dashed = async event / webhook</span>
+    </div>
+  </div>
+</div>
+
+<div class="workspace">
+  <div id="step-stage"></div>
+  <div class="db-section">
+    <div class="db-header">
+      <h2>Database state</h2>
+      <span class="progress-label" style="margin:0;">live across all tables — accent ring marks what this step touches</span>
+    </div>
+    <div class="db-grid" id="db-grid"></div>
+  </div>
+</div>
+
+<div class="control-bar">
+  <div class="control-inner">
+    <button class="btn ghost" id="btn-restart">&#8635; Restart</button>
+    <button class="btn" id="btn-back">&larr; Back</button>
+    <div class="progress-wrap">
+      <div class="progress-label" id="progress-text">Click the start button to begin</div>
+      <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+    </div>
+    <button class="btn primary" id="btn-next">Next &rarr;</button>
+  </div>
+</div>
+
+<div class="visually-hidden" aria-live="polite" id="live-announcer"></div>
+
+<script>
+/* ==================================================================
+   SYSTEM DATA — edit this block only. Everything below the line
+   "END SYSTEM DATA" is the generic engine — do not edit it per system.
+   ==================================================================
+
+   STEP OBJECT CONTRACT (each entry in STEPS / a branch option's steps):
+     key         string, unique id for this step (used for DB-row touch matching)
+     eyebrow     string, small label above the title (e.g. service/phase name)
+     title       string
+     summary     string, one sentence
+     bullets     string[] — "what this hop does", 2-4 items, optional ([])
+     diagram     { nodes: [ids to highlight], edges: [ids to highlight] }
+     payloads    [{ label, code }] — request/response/message bodies shown
+                 side-by-side with SQL; use [] if nothing to show
+     sql         string[] of SQL statements, or null if no DB access
+     sqlNote     string shown instead of sql when sql is null
+     mutations   [{ table, op:'insert', row:{...} }
+                   | { table, op:'update', match:{...}, changes:{...} }]
+     outcome     optional 'ok'|'bad'|'warn' — renders a banner (use on the
+                 final step of a path)
+     outcomeText optional string for that banner
+     isBranch    true only on a branch-choice step (see BRANCH below)
+*/
+
+  var SEED = {
+    fare_buckets: [{ flight_id: "FL-220", fare_class: "ECONOMY", sold: "149" }],
+    bookings: []
+  };
+
+  var TABLE_KEYS = {
+    fare_buckets: ["flight_id", "fare_class", "sold"],
+    bookings: ["booking_id", "seat_id", "status"]
+  };
+
+  var TABLE_LABEL = { fare_buckets: "fare_buckets (sql)", bookings: "bookings (sql)" };
+
+  var STATUS_COLORS = { CONFIRMED: "warn", CHECKED_IN: "ok", DENIED_BOARDING: "bad" };
+
+  var STEPS = [
+    {
+      key: "book",
+      eyebrow: "Booking",
+      title: "Passenger books Economy on FL-220",
+      summary: "Physical Economy capacity is 150 seats — this is booking #150, still within the airline's deliberate overbook limit of 155. No seat is assigned yet.",
+      bullets: [],
+      diagram: { nodes: ["n-client", "n-service", "n-sql"], edges: ["e-client-service", "e-service-sql"] },
+      payloads: [{ label: "Passenger → Booking Service", code: '{ "flightId": "FL-220", "fareClass": "ECONOMY" }' }],
+      sql: ["UPDATE fare_buckets SET sold = sold + 1\nWHERE flight_id = 'FL-220' AND fare_class = 'ECONOMY' AND sold < 155;   -- 149 < 155, succeeds"],
+      mutations: [
+        { table: "fare_buckets", op: "update", match: { flight_id: "FL-220" }, changes: { sold: "150" } },
+        { table: "bookings", op: "insert", row: { booking_id: "BK-9001", seat_id: "-", status: "CONFIRMED" } }
+      ]
+    }
+  ];
+
+  var SEAT_AVAILABLE_STEPS = [
+    {
+      key: "checkin-success",
+      eyebrow: "Check-in",
+      title: "A physical seat is still available",
+      summary: "Enough passengers from other bookings didn't show up — the Redis lock for an actual seat acquires cleanly.",
+      bullets: [],
+      diagram: { nodes: ["n-client", "n-service", "n-redis"], edges: ["e-client-service", "e-service-redis"] },
+      payloads: [{ label: "SET NX", code: "SET lock:seat:FL-220:14C BK-9001 NX EX 3600 -> OK" }],
+      sql: ["UPDATE bookings SET seat_id = '14C', status = 'CHECKED_IN' WHERE booking_id = 'BK-9001';"],
+      mutations: [{ table: "bookings", op: "update", match: { booking_id: "BK-9001" }, changes: { seat_id: "14C", status: "CHECKED_IN" } }],
+      outcome: "ok",
+      outcomeText: "✓ Checked in with seat 14C — the overbooking never became a real problem this time."
+    }
+  ];
+
+  var SEAT_OVERSOLD_STEPS = [
+    {
+      key: "checkin-bumped",
+      eyebrow: "Check-in",
+      title: "Every physical seat is already locked",
+      summary: "Turnout was higher than predicted — all 150 physical seats were claimed by earlier check-ins. This booking is real and paid for, but there is no seat left to assign.",
+      bullets: ["This is the actual cost of yield management: on the rare occasion turnout outruns the no-show model, a confirmed passenger gets bumped."],
+      diagram: { nodes: ["n-client", "n-service", "n-redis"], edges: ["e-client-service", "e-service-redis"] },
+      payloads: [{ label: "SET NX (every remaining seat)", code: "SET lock:seat:FL-220:14C BK-9001 NX EX 3600 -> (nil)\n... every other seat also already held ..." }],
+      sql: ["UPDATE bookings SET status = 'DENIED_BOARDING' WHERE booking_id = 'BK-9001';"],
+      mutations: [{ table: "bookings", op: "update", match: { booking_id: "BK-9001" }, changes: { status: "DENIED_BOARDING" } }],
+      outcome: "bad",
+      outcomeText: "✗ Denied boarding — a valid, paid booking with no physical seat left. The airline compensates; the system correctly reflects what actually happened."
+    }
+  ];
+
+  var BRANCH = {
+    key: "branch",
+    eyebrow: "At the gate",
+    title: "Is a physical seat still available at check-in?",
+    summary: "150 economy seats exist; 150 bookings are now confirmed. Whether that's fine depends entirely on how many people actually show up.",
+    bullets: [],
+    diagram: { nodes: ["n-redis"], edges: [] },
+    payloads: [],
+    sql: null,
+    sqlNote: "Choose an outcome below to continue.",
+    mutations: [],
+    isBranch: true,
+    options: [
+      { id: "available", label: "✓ Seat available (no-shows as predicted)", btnClass: "ok-btn", steps: SEAT_AVAILABLE_STEPS },
+      { id: "oversold", label: "✗ Oversold (everyone showed up)", btnClass: "bad-btn", steps: SEAT_OVERSOLD_STEPS }
+    ]
+  };
+
+/* ================================ END SYSTEM DATA ================================ */
+
+(function () {
+  "use strict";
+
+  function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+
+  var state = { index: -1, choice: null };
+
+  function currentPath() {
+    var p = STEPS.slice();
+    if (BRANCH) {
+      p.push(BRANCH);
+      if (state.choice) {
+        var opt = BRANCH.options.filter(function (o) { return o.id === state.choice; })[0];
+        if (opt) p = p.concat(opt.steps);
+      }
+    }
+    return p;
+  }
+
+  function cloneSeed() {
+    var out = {};
+    Object.keys(SEED).forEach(function (t) { out[t] = SEED[t].map(function (r) { return Object.assign({}, r); }); });
+    return out;
+  }
+
+  function applyMutations(world, mutations, stepKey) {
+    mutations.forEach(function (m) {
+      if (m.op === "insert") {
+        var row = Object.assign({}, m.row);
+        row._touch = stepKey; row._touchKind = "new";
+        world[m.table].push(row);
+      } else if (m.op === "update") {
+        world[m.table].forEach(function (row) {
+          var matches = Object.keys(m.match).every(function (k) { return row[k] === m.match[k]; });
+          if (matches) { Object.assign(row, m.changes); row._touch = stepKey; row._touchKind = "upd"; }
+        });
+      }
+    });
+  }
+
+  function computeWorldUpTo(index) {
+    var world = cloneSeed();
+    var path = currentPath();
+    for (var i = 0; i <= index; i++) applyMutations(world, path[i].mutations, path[i].key);
+    return world;
+  }
+
+  function allNodeIds() { return Array.prototype.map.call(document.querySelectorAll(".node[id]"), function (el) { return el.id; }); }
+  function allEdgeIds() { return Array.prototype.map.call(document.querySelectorAll(".edge[id]"), function (el) { return el.id; }); }
+
+  function updateDiagram(step) {
+    var activeNodes = (step && step.diagram && step.diagram.nodes) || [];
+    var activeEdges = (step && step.diagram && step.diagram.edges) || [];
+    allNodeIds().forEach(function (id) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      var isGroup = !!el.querySelector(".edgegroup-box");
+      el.classList.toggle("active", activeNodes.indexOf(id) !== -1);
+      el.classList.toggle("muted", activeNodes.indexOf(id) === -1 && !isGroup);
+      var box = el.querySelector(".edgegroup-box");
+      if (box) box.classList.toggle("active", activeNodes.indexOf(id) !== -1);
+    });
+    allEdgeIds().forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) el.classList.toggle("active", activeEdges.indexOf(id) !== -1);
+    });
+  }
+
+  function pillClass(value) { return STATUS_COLORS[value] || "neutral"; }
+
+  function renderCell(col, value) {
+    if (col === "status") return '<span class="pill ' + pillClass(value) + '">' + esc(value) + "</span>";
+    return esc(value);
+  }
+
+  function renderTables(world, currentStepKey) {
+    var grid = document.getElementById("db-grid");
+    var html = "";
+    Object.keys(TABLE_KEYS).forEach(function (table) {
+      var cols = TABLE_KEYS[table];
+      var rows = world[table];
+      var touchedThisStep = rows.some(function (r) { return r._touch === currentStepKey; });
+      html += '<div class="db-card' + (touchedThisStep ? " touched" : "") + '">';
+      html += '<div class="db-card-head"><span class="name">' + TABLE_LABEL[table] + "</span>";
+      html += '<span class="count">' + rows.length + (rows.length === 1 ? " row" : " rows") + "</span></div>";
+      html += '<div class="db-card-body">';
+      if (rows.length === 0) {
+        html += '<div class="db-empty">empty</div>';
+      } else {
+        html += '<table class="db-table"><thead><tr>';
+        cols.forEach(function (c) { html += "<th>" + c + "</th>"; });
+        html += "</tr></thead><tbody>";
+        rows.forEach(function (row) {
+          var isTouched = row._touch === currentStepKey;
+          html += '<tr class="' + (isTouched ? "row-touched" : "") + '">';
+          cols.forEach(function (c, i) {
+            html += "<td>" + renderCell(c, row[c] === undefined ? "" : row[c]);
+            if (isTouched && i === cols.length - 1) html += '<span class="row-chip ' + (row._touchKind === "new" ? "new" : "upd") + '">' + (row._touchKind === "new" ? "NEW" : "SET") + "</span>";
+            html += "</td>";
+          });
+          html += "</tr>";
+        });
+        html += "</tbody></table>";
+      }
+      html += "</div></div>";
+    });
+    grid.innerHTML = html;
+  }
+
+  function renderIdle() {
+    updateDiagram(null);
+    var stage = document.getElementById("step-stage");
+    stage.innerHTML =
+      '<div class="intro"><h2>Ready when you are.</h2>' +
+      "<p>Replace this copy with a one-line pitch for the concrete example this trace walks through.</p>" +
+      '<button class="btn primary" id="btn-start" style="padding:14px 26px;font-size:15px;">Start &rarr;</button></div>';
+    document.getElementById("btn-start").addEventListener("click", start);
+    renderTables(cloneSeed(), null);
+    updateControlsIdle();
+    announce("Ready to start.");
+  }
+
+  function codeBlock(items, emptyNote) {
+    if (!items || items.length === 0) return '<div class="empty-note">' + esc(emptyNote || "Nothing here.") + "</div>";
+    return items.map(function (item) {
+      var label = typeof item === "string" ? null : item.label;
+      var code = typeof item === "string" ? item : item.code;
+      return (label ? '<div class="panel-label">' + esc(label) + "</div>" : "") + '<div class="code-block"><pre>' + esc(code) + "</pre></div>";
+    }).join('<div style="height:10px"></div>');
+  }
+
+  function renderStep(step, index, total) {
+    updateDiagram(step);
+    var stage = document.getElementById("step-stage");
+    var bulletsHtml = step.bullets && step.bullets.length ? '<ul class="bullets">' + step.bullets.map(function (b) { return "<li>" + esc(b) + "</li>"; }).join("") + "</ul>" : "";
+    var requestHtml = codeBlock(step.payloads, "No payload at this hop.");
+    var sqlHtml = step.sql ? codeBlock(step.sql.map(function (s) { return { label: null, code: s }; })) : '<div class="empty-note">' + esc(step.sqlNote || "No database access at this hop.") + "</div>";
+
+    var branchHtml = "";
+    if (step.isBranch) {
+      branchHtml = '<div class="branch-actions">' + step.options.map(function (o) {
+        return '<button class="btn ' + o.btnClass + '" data-choice="' + o.id + '">' + esc(o.label) + "</button>";
+      }).join("") + "</div>";
+    }
+
+    var outcomeHtml = step.outcome ? '<div class="outcome-banner ' + step.outcome + '">' + esc(step.outcomeText) + "</div>" : "";
+
+    stage.innerHTML =
+      '<div class="step-card"><div class="step-meta">' +
+      '<span class="step-eyebrow">' + esc(step.eyebrow) + "</span>" +
+      '<span class="step-progress-text">STEP ' + String(index + 1).padStart(2, "0") + " / " + String(total).padStart(2, "0") + "</span></div>" +
+      '<h2 class="step-title">' + esc(step.title) + "</h2>" +
+      '<p class="step-summary">' + esc(step.summary) + "</p>" +
+      bulletsHtml + branchHtml + outcomeHtml +
+      (step.isBranch ? "" :
+        '<div class="detail-grid">' +
+        '<div class="detail-col"><div class="panel-label">Payload</div>' + requestHtml + "</div>" +
+        '<div class="detail-col"><div class="panel-label">SQL executed</div>' + sqlHtml + "</div></div>") +
+      "</div>";
+
+    if (step.isBranch) {
+      Array.prototype.forEach.call(stage.querySelectorAll("[data-choice]"), function (btn) {
+        btn.addEventListener("click", function () { chooseBranch(btn.getAttribute("data-choice")); });
+      });
+    }
+
+    renderTables(computeWorldUpTo(index), step.key);
+    announce(step.title + ". " + step.summary);
+  }
+
+  function announce(text) { document.getElementById("live-announcer").textContent = text; }
+
+  function updateControlsIdle() {
+    document.getElementById("btn-back").disabled = true;
+    document.getElementById("btn-next").disabled = true;
+    document.getElementById("btn-next").style.display = "";
+    document.getElementById("btn-next").textContent = "Next →";
+    document.getElementById("progress-text").textContent = "Click the start button to begin";
+    document.getElementById("progress-fill").style.width = "0%";
+  }
+
+  function updateControls(step, index, total) {
+    var back = document.getElementById("btn-back");
+    var next = document.getElementById("btn-next");
+    back.disabled = index <= 0;
+    if (step.isBranch) {
+      next.style.display = "none";
+    } else {
+      next.style.display = "";
+      var isLast = index === total - 1;
+      next.disabled = isLast;
+      next.textContent = isLast ? "End of trace" : "Next →";
+    }
+    document.getElementById("progress-text").textContent = "Step " + (index + 1) + " of " + total + " — " + step.title;
+    document.getElementById("progress-fill").style.width = Math.round(((index + 1) / total) * 100) + "%";
+  }
+
+  function render() {
+    if (state.index < 0) { renderIdle(); return; }
+    var path = currentPath();
+    var step = path[state.index];
+    renderStep(step, state.index, path.length);
+    updateControls(step, state.index, path.length);
+  }
+
+  function start() { state.index = 0; state.choice = null; render(); }
+
+  function chooseBranch(choiceId) {
+    state.choice = choiceId;
+    state.index = STEPS.length + 1; // first step of the chosen branch
+    render();
+  }
+
+  function goNext() { var path = currentPath(); if (state.index < path.length - 1) { state.index += 1; render(); } }
+
+  function goBack() {
+    if (state.index <= 0) return;
+    if (BRANCH && state.index === STEPS.length + 1) state.choice = null; // stepping back into the branch re-opens it
+    state.index -= 1;
+    render();
+  }
+
+  function restart() { state.index = -1; state.choice = null; render(); }
+
+  document.getElementById("btn-next").addEventListener("click", goNext);
+  document.getElementById("btn-back").addEventListener("click", goBack);
+  document.getElementById("btn-restart").addEventListener("click", restart);
+  document.addEventListener("keydown", function (e) { if (e.key === "ArrowRight") goNext(); if (e.key === "ArrowLeft") goBack(); });
+
+  render();
+})();
+</script>
