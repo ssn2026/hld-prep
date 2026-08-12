@@ -42,8 +42,9 @@ logic, catalog/search.
 ### Service Architecture
 
 **Diagram:** `systems/diagrams/amazon-order-management-system.drawio`
-(page 1: full production topology — edge layer through services and
-Kafka; page 2: async payment/Kafka event flow in detail)
+(page 1: synchronous request path — edge layer through services, each
+with its DB; page 2: async payment completion + Kafka fan-out, separated
+out so the two don't get tangled together on one page)
 
 **Edge layer** (shared infrastructure, not owned by Order Management):
 every client request hits a **Load Balancer** (L7) → **API Gateway**
