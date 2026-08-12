@@ -30,7 +30,7 @@ Cassandra Based Systems, Social Media, Video Based Systems, (ungrouped)
 | Click Event Aggregator | (ungrouped) | not created | 0/10 | Not Started | - | never | TBD — will add in a follow-up step |
 | Stock Broker | (ungrouped) | not created | 0/10 | Not Started | - | never | TBD — will add in a follow-up step |
 | Notification System | Notification System | not created | 0/10 | Not Started | - | never | TBD — will add in a follow-up step |
-| Amazon Order Managment System | Ordering System | systems/amazon-order-management-system.md | 10/10 | Deep Dive Ready | SQL | 2026-08-12 | TBD — will add in a follow-up step |
+| Amazon Order Managment System | Ordering System | systems/amazon-order-management-system.md | 10/10 | Deep Dive Ready | SQL, Kafka | 2026-08-12 | TBD — will add in a follow-up step |
 | Hotel ReservationSyste | Booking System | not created | 0/10 | Service Flow | SQL | never | TBD — will add in a follow-up step |
 | Rate Limiter | Rate Limiter | not created | 0/10 | Service Flow | Redis | never | TBD — will add in a follow-up step |
 | Flight Ticket Booking | Booking System | not created | 0/10 | Not Started | SQL | never | TBD — will add in a follow-up step |
