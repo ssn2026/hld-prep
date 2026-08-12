@@ -47,7 +47,7 @@ Cassandra Based Systems, Social Media, Video Based Systems, (ungrouped)
 | URL Shortner | Simple Cassandra Based Systems | systems/url-shortner.md | 10/10 | Deep Dive Ready | cassandra, Redis | 2026-08-12 | TBD — will add in a follow-up step |
 | Uber find nearby driver | Location Based Systems | systems/uber-find-nearby-driver.md | 10/10 | Deep Dive Ready | cassandra, Redis | 2026-08-12 | TBD — will add in a follow-up step |
 | Nearyby friends | Location Based Systems | systems/nearyby-friends.md | 10/10 | Deep Dive Ready | Redis | 2026-08-12 | TBD — will add in a follow-up step |
-| Proximity ServiceBase | Location Based Systems | not created | 0/10 | System Flow | SQL | never | TBD — will add in a follow-up step |
+| Proximity ServiceBase | Location Based Systems | systems/proximity-servicebase.md | 10/10 | Deep Dive Ready | SQL | 2026-08-12 | TBD — will add in a follow-up step |
 | News Feeds | Social Media | not created | 0/10 | Service Flow | Redis, cassandra | never | TBD — will add in a follow-up step |
 | Chat Systems | Social Media | systems/chat-systems.md | 10/10 | Deep Dive Ready | cassandra, Redis | 2026-08-12 | TBD — will add in a follow-up step |
 | Whatsapp User Socket info | Social Media | not created | 0/10 | Service Flow | Redis | never | TBD — will add in a follow-up step |
