@@ -22,7 +22,7 @@ Cassandra Based Systems, Social Media, Video Based Systems, (ungrouped)
 
 | Service Name | Grouping | File | Sections Complete (x/10) | Status | Labels | Last Session | Notion URL |
 |---|---|---|---|---|---|---|---|
-| Netfilx | Video Based Systems | not created | 0/10 | System Flow | - | never | TBD — will add in a follow-up step |
+| Netfilx | Video Based Systems | systems/netfilx.md | 10/10 | Deep Dive Ready | SQL, cassandra | 2026-08-12 | TBD — will add in a follow-up step |
 | Broadcasting System | Video Based Systems | not created | 0/10 | Not Started | - | never | TBD — will add in a follow-up step |
 | Zoom | Video Based Systems | not created | 0/10 | Not Started | - | never | TBD — will add in a follow-up step |
 | Youtube | Video Based Systems | not created | 0/10 | Not Started | - | never | TBD — will add in a follow-up step |
