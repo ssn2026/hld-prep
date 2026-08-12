@@ -556,6 +556,18 @@ Target: 10K orders/sec at peak, ~50K QPS reads.
 
 ## Implementation Notes
 
-_(none yet — see `/implementation` for focused deep dives, e.g. the
-inventory reservation Lua script, the SAGA orchestrator's compensation
-logic, or the reservation-expiry reaper job)_
+**Interactive checkout trace** —
+`systems/implementations/amazon-order-management-system-checkout-trace.html`
+(self-contained, open directly in a browser). A click-through walkthrough
+of one concrete checkout (`ORD-7841`, 2 items, $288.99) hop by hop across
+the whole topology: Load Balancer → API Gateway/Auth → Order Service →
+Inventory Service → Payment Service → Kafka → back to Order/Inventory —
+showing the exact payload each hop receives, the SQL it runs, and the
+live state of all six tables after each step. Branches at the payment
+step into the success path (webhook → Kafka → both consumers finalize)
+and the abandoned-payment path (reservation-expiry reaper releases the
+hold, order → `PAYMENT_FAILED`).
+
+_(nothing else yet — see `/implementation` for further deep dives, e.g.
+the inventory reservation Lua script or the SAGA orchestrator's
+compensation logic)_
