@@ -29,7 +29,7 @@ Cassandra Based Systems, Social Media, Video Based Systems, (ungrouped)
 | Movie Ticket Booking | Booking System | systems/movie-ticket-booking.md | 10/10 | Deep Dive Ready | SQL, Redis | 2026-08-12 | TBD — will add in a follow-up step |
 | Click Event Aggregator | (ungrouped) | not created | 0/10 | Not Started | - | never | TBD — will add in a follow-up step |
 | Stock Broker | (ungrouped) | not created | 0/10 | Not Started | - | never | TBD — will add in a follow-up step |
-| Notification System | Notification System | not created | 0/10 | Not Started | - | never | TBD — will add in a follow-up step |
+| Notification System | Notification System | systems/notification-system.md | 10/10 | Deep Dive Ready | Kafka, cassandra, SQL | 2026-08-12 | TBD — will add in a follow-up step |
 | Amazon Order Managment System | Ordering System | systems/amazon-order-management-system.md | 10/10 | Deep Dive Ready | SQL, Kafka | 2026-08-12 | TBD — will add in a follow-up step |
 | Hotel ReservationSyste | Booking System | not created | 0/10 | Service Flow | SQL | never | TBD — will add in a follow-up step |
 | Rate Limiter | Rate Limiter | systems/rate-limiter.md | 10/10 | Deep Dive Ready | Redis, SQL | 2026-08-12 | TBD — will add in a follow-up step |

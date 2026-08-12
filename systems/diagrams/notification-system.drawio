@@ -1,0 +1,87 @@
+<mxfile host="app.diagrams.net" modified="2026-08-12T00:00:00.000Z" agent="hld-prep" version="24.0.0" type="device">
+  <diagram id="page1-architecture" name="1 - Event Intake and Fan-out">
+    <mxGraphModel dx="1200" dy="700" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1560" pageHeight="360" math="0" shadow="0">
+      <root>
+        <mxCell id="0" /><mxCell id="1" parent="0" />
+        <mxCell id="a-producer" value="Producer Service&#10;(any internal service)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="30" y="140" width="170" height="60" as="geometry" /></mxCell>
+        <mxCell id="a-kafka1" value="Kafka&#10;notification.events" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="240" y="135" width="180" height="70" as="geometry" /></mxCell>
+        <mxCell id="a-worker" value="Notification Worker" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="460" y="135" width="180" height="70" as="geometry" /></mxCell>
+        <mxCell id="a-sql" value="SQL&#10;preferences, idempotency" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="690" y="20" width="180" height="80" as="geometry" /></mxCell>
+        <mxCell id="a-cassandra" value="Cassandra&#10;notification_log" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="690" y="140" width="180" height="80" as="geometry" /></mxCell>
+        <mxCell id="a-ratelimiter" value="Rate Limiter Service&#10;(this repo's own system)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="690" y="250" width="180" height="70" as="geometry" /></mxCell>
+        <mxCell id="a-kafka2" value="Kafka&#10;notification.dispatch.{channel}" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="920" y="135" width="200" height="70" as="geometry" /></mxCell>
+        <mxCell id="a-dispatcher" value="Channel Dispatcher" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="1170" y="135" width="180" height="70" as="geometry" /></mxCell>
+        <mxCell id="a-provider" value="Provider&#10;(FCM / SES / Twilio)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="1400" y="140" width="150" height="60" as="geometry" /></mxCell>
+
+        <mxCell id="a-e1" value="publish" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;dashed=1;" edge="1" parent="1" source="a-producer" target="a-kafka1">
+          <mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="a-e2" value="consume" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;dashed=1;" edge="1" parent="1" source="a-kafka1" target="a-worker">
+          <mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="a-e3" value="idempotency + preferences" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=block;endArrow=block;" edge="1" parent="1" source="a-worker" target="a-sql">
+          <mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="a-e4" value="write PENDING" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=block;endArrow=block;" edge="1" parent="1" source="a-worker" target="a-cassandra">
+          <mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="a-e5" value="check rate limit" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=block;endArrow=block;" edge="1" parent="1" source="a-worker" target="a-ratelimiter">
+          <mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="a-e6" value="publish" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;dashed=1;" edge="1" parent="1" source="a-worker" target="a-kafka2">
+          <mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="a-e7" value="consume" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;dashed=1;" edge="1" parent="1" source="a-kafka2" target="a-dispatcher">
+          <mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="a-e8" value="send" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=block;endArrow=block;" edge="1" parent="1" source="a-dispatcher" target="a-provider">
+          <mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="a-e9" value="update SENT / FAILED" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" edge="1" parent="1" source="a-dispatcher" target="a-cassandra">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="1260" y="260" /><mxPoint x="780" y="260" /></Array>
+          </mxGeometry></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <diagram id="page2-state" name="2 - Notification State">
+    <mxGraphModel dx="1200" dy="700" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="960" pageHeight="280" math="0" shadow="0">
+      <root>
+        <mxCell id="0" /><mxCell id="1" parent="0" />
+        <mxCell id="b-pending" value="PENDING" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="30" y="40" width="130" height="50" as="geometry" /></mxCell>
+        <mxCell id="b-rendered" value="RENDERED" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="200" y="40" width="130" height="50" as="geometry" /></mxCell>
+        <mxCell id="b-queued" value="QUEUED" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="370" y="40" width="130" height="50" as="geometry" /></mxCell>
+        <mxCell id="b-sent" value="SENT" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="540" y="40" width="130" height="50" as="geometry" /></mxCell>
+        <mxCell id="b-delivered" value="DELIVERED" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="710" y="40" width="130" height="50" as="geometry" /></mxCell>
+        <mxCell id="b-failed" value="FAILED" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="370" y="170" width="130" height="50" as="geometry" /></mxCell>
+        <mxCell id="b-retrying" value="RETRYING" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fbebd2;strokeColor=#a86a08;" vertex="1" parent="1">
+          <mxGeometry x="540" y="170" width="130" height="50" as="geometry" /></mxCell>
+
+        <mxCell id="b-e1" edge="1" parent="1" source="b-pending" target="b-rendered" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;">
+          <mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="b-e2" edge="1" parent="1" source="b-rendered" target="b-queued" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;">
+          <mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="b-e3" value="dispatch succeeds" edge="1" parent="1" source="b-queued" target="b-sent" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;">
+          <mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="b-e4" value="provider confirms" edge="1" parent="1" source="b-sent" target="b-delivered" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;">
+          <mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="b-e5" value="dispatch attempt fails" edge="1" parent="1" source="b-queued" target="b-failed" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;">
+          <mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="b-e6" value="backoff + jitter" edge="1" parent="1" source="b-failed" target="b-retrying" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;">
+          <mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="b-e7" value="retry succeeds" edge="1" parent="1" source="b-retrying" target="b-sent" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;">
+          <mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="b-e8" value="retries exhausted" edge="1" parent="1" source="b-retrying" target="b-failed" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;exitY=0.7;entryY=0.7;">
+          <mxGeometry relative="1" as="geometry" /></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
