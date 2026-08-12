@@ -35,7 +35,7 @@ Cassandra Based Systems, Social Media, Video Based Systems, (ungrouped)
 | Rate Limiter | Rate Limiter | systems/rate-limiter.md | 10/10 | Deep Dive Ready | Redis, SQL | 2026-08-12 | TBD — will add in a follow-up step |
 | Flight Ticket Booking | Booking System | systems/flight-ticket-booking.md | 10/10 | Deep Dive Ready | SQL, Redis | 2026-08-12 | TBD — will add in a follow-up step |
 | Doctor Appointment | Booking System | systems/doctor-appointment.md | 10/10 | Deep Dive Ready | SQL, Redis | 2026-08-12 | TBD — will add in a follow-up step |
-| Google Maps | Location Based Systems | not created | 0/10 | Not Started | - | never | TBD — will add in a follow-up step |
+| Google Maps | Location Based Systems | systems/google-maps.md | 10/10 | Deep Dive Ready | SQL | 2026-08-12 | TBD — will add in a follow-up step |
 | Digital Wallet | (ungrouped) | not created | 0/10 | Not Started | SQL | never | TBD — will add in a follow-up step |
 | Payment Gateway | (ungrouped) | not created | 0/10 | Not Started | SQL | never | TBD — will add in a follow-up step |
 | Google Drive | (ungrouped) | not created | 0/10 | Not Started | - | never | TBD — will add in a follow-up step |
