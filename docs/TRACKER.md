@@ -40,7 +40,7 @@ Cassandra Based Systems, Social Media, Video Based Systems, (ungrouped)
 | Payment Gateway | (ungrouped) | not created | 0/10 | Not Started | SQL | never | TBD — will add in a follow-up step |
 | Google Drive | (ungrouped) | not created | 0/10 | Not Started | - | never | TBD — will add in a follow-up step |
 | Redis As cache | (ungrouped) | not created | 0/10 | System Flow | Redis | never | TBD — will add in a follow-up step |
-| LeaderBoard | (ungrouped) | not created | 0/10 | Service Flow | Redis | never | TBD — will add in a follow-up step |
+| LeaderBoard | (ungrouped) | systems/leaderboard.md | 10/10 | Deep Dive Ready | Redis, SQL | 2026-08-12 | TBD — will add in a follow-up step |
 | Like and Comment Service | Social Media | not created | 0/10 | Service Flow | Redis, cassandra | never | TBD — will add in a follow-up step |
 | Key Value StoreBa | Simple Cassandra Based Systems | not created | 0/10 | Service Flow | cassandra | never | TBD — will add in a follow-up step |
 | Unique Id Generator | Simple Cassandra Based Systems | not created | 0/10 | Service Flow | cassandra | never | TBD — will add in a follow-up step |
