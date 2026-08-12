@@ -75,3 +75,4 @@ more recently than this concept's Last Reviewed date.
 | SQL Data base locking | SQL | not created | never | Check recommended | TBD — will add in a follow-up step |
 | Distributed lokcing | Redis | not created | never | Check recommended | TBD — will add in a follow-up step |
 | Gossip Protocol | cassandra | not created | never | Check recommended | TBD — will add in a follow-up step |
+| Flash Sale Scaling (Peak Load) | Redis, SQL — linked to Amazon Order Managment System | concepts/flash-sale-scaling.md | 2026-08-12 | Fresh | TBD — will add in a follow-up step |

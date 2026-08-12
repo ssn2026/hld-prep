@@ -114,6 +114,11 @@ relevant section(s) of the system's `.md` file so it's discoverable
 without a separate index. Interview Mode and Implementation Mode do not
 require diagrams unless the user asks.
 
+The same convention applies to Type B concept notes when a diagram
+genuinely earns its place there (on request, not automatic) — mirror the
+path under `concepts/diagrams/<kebab-case-name>.drawio` instead of
+`systems/diagrams/`.
+
 **Production-quality bar** (learned the hard way — the first pass at
 this was rejected as "not production ready"):
 
@@ -149,7 +154,9 @@ they change.
 
 **File convention:** `systems/implementations/<kebab-case-name>-trace.html`
 (same kebab-case stem as the system), linked from that system's
-`## Implementation Notes` section.
+`## Implementation Notes` section. For a Type B concept note, mirror this
+under `concepts/implementations/<kebab-case-name>-trace.html` instead,
+linked from the concept's own `.md` file.
 
 **Build it cheap — copy, don't regenerate:**
 

@@ -1,0 +1,177 @@
+<mxfile host="app.diagrams.net" modified="2026-08-12T00:00:00.000Z" agent="hld-prep" version="24.0.0" type="device">
+  <diagram id="page1-mode-routing" name="1 - Mode Routing Architecture">
+    <mxGraphModel dx="1200" dy="700" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1080" pageHeight="400" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="p1-client" value="Client" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="20" y="150" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-order" value="Order Service" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="200" y="150" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-router" value="Reservation Router&#10;(Strategy pattern)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="410" y="140" width="170" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-flagstore" value="Flag Store&#10;(etcd / Redis pub-sub)&#10;per-SKU, watchable" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="410" y="280" width="170" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-sqlstrategy" value="SqlReservationStrategy" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="650" y="40" width="180" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-sqldb" value="Inventory DB&#10;(PostgreSQL)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="880" y="35" width="150" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-redisstrategy" value="RedisReservationStrategy" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="650" y="250" width="180" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-redis" value="Redis&#10;sharded counters + Lua DECR" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="880" y="245" width="160" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="p1-e1" value="reserve request" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=block;endArrow=block;" edge="1" parent="1" source="p1-client" target="p1-order">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-e2" value="reserve(sku, qty)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=block;endArrow=block;" edge="1" parent="1" source="p1-order" target="p1-router">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-e3" value="lookup flag(sku)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=block;endArrow=block;" edge="1" parent="1" source="p1-router" target="p1-flagstore">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-e4" value="flag = SQL_PRIMARY" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" edge="1" parent="1" source="p1-router" target="p1-sqlstrategy">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-e5" value="flag = REDIS_PRIMARY" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" edge="1" parent="1" source="p1-router" target="p1-redisstrategy">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-e6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=block;endArrow=block;" edge="1" parent="1" source="p1-sqlstrategy" target="p1-sqldb">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-e7" value="Lua DECR" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=block;endArrow=block;" edge="1" parent="1" source="p1-redisstrategy" target="p1-redis">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="p1-note" value="Only SKUs flagged REDIS_PRIMARY route here — the rest of the catalog stays on SqlReservationStrategy the entire sale." style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;fontSize=12;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="20" y="330" width="360" height="50" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <diagram id="page2-sale-window-flow" name="2 - Sale-Window Write-Behind and Reconciliation">
+    <mxGraphModel dx="1200" dy="700" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1080" pageHeight="440" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="p2-client" value="Client" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="20" y="160" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-redis" value="Redis&#10;sharded counters" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="200" y="160" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-kafka" value="Kafka&#10;order-intent topic" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="410" y="160" width="150" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-worker" value="Order Worker&#10;(write-behind)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="630" y="70" width="170" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-ordersdb" value="Orders DB&#10;(PostgreSQL)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="850" y="65" width="150" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-reconciler" value="Reconciler job&#10;(periodic)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="630" y="250" width="170" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-flagstore" value="Flag Store" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="850" y="250" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-sqlinv" value="Inventory DB&#10;(PostgreSQL)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="630" y="350" width="170" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="p2-e1" value="reserve (Lua script)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" edge="1" parent="1" source="p2-client" target="p2-redis">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-e2" value="order intent" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;dashed=1;" edge="1" parent="1" source="p2-redis" target="p2-kafka">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-e3" value="consume" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;dashed=1;" edge="1" parent="1" source="p2-kafka" target="p2-worker">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-e4" value="INSERT order&#10;(PENDING_PAYMENT)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" edge="1" parent="1" source="p2-worker" target="p2-ordersdb">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-e5" value="read counters" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;dashed=1;" edge="1" parent="1" source="p2-reconciler" target="p2-redis">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-e6" value="read orders" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;dashed=1;" edge="1" parent="1" source="p2-reconciler" target="p2-ordersdb">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-e7" value="reconcile final count" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;dashed=1;" edge="1" parent="1" source="p2-reconciler" target="p2-sqlinv">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-e8" value="clear flag when reconciled" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;dashed=1;" edge="1" parent="1" source="p2-reconciler" target="p2-flagstore">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="p2-legend-box" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#999999;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="20" y="260" width="560" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-legend-title" value="LEGEND" style="text;html=1;fontSize=11;fontStyle=1;align=left;" vertex="1" parent="1">
+          <mxGeometry x="30" y="265" width="100" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-legend-text" value="Solid = synchronous, on the request path (Client reserving). Dashed = async/background — Kafka hand-off, write-behind, and everything the periodic reconciler does." style="text;html=1;fontSize=11;align=left;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="30" y="288" width="530" height="36" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <diagram id="page3-flag-lifecycle" name="3 - Per-SKU Flag Lifecycle">
+    <mxGraphModel dx="1200" dy="700" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="920" pageHeight="340" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="p3-sql" value="SQL_PRIMARY" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="40" y="130" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="p3-warming" value="WARMING&#10;(seeding Redis from SQL)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fbebd2;strokeColor=#a86a08;" vertex="1" parent="1">
+          <mxGeometry x="270" y="130" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="p3-redis" value="REDIS_PRIMARY&#10;(sale live)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="500" y="130" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="p3-draining" value="DRAINING&#10;(reconciling to SQL)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fbebd2;strokeColor=#a86a08;" vertex="1" parent="1">
+          <mxGeometry x="730" y="130" width="150" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="p3-e1" value="flag scheduled ON" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" edge="1" parent="1" source="p3-sql" target="p3-warming">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p3-e2" value="warm-up complete" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" edge="1" parent="1" source="p3-warming" target="p3-redis">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p3-e3" value="sale window ends (scheduled)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;exitY=0.3;entryY=0.3;" edge="1" parent="1" source="p3-redis" target="p3-draining">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p3-e4" value="kill switch (emergency)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;exitY=0.7;entryY=0.7;strokeColor=#c23b3b;fontColor=#c23b3b;" edge="1" parent="1" source="p3-redis" target="p3-draining">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p3-e5" value="final count reconciled to SQL; flag cleared" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;exitX=0.5;exitY=1;entryX=0.5;entryY=1;" edge="1" parent="1" source="p3-draining" target="p3-sql">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="805" y="260" />
+              <mxPoint x="120" y="260" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="p3-note" value="Both transitions into DRAINING do the same thing — reconcile Redis's count back into SQL before the flag clears. The kill switch just triggers it early, from an operator, without a deploy." style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;fontSize=12;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="40" y="30" width="700" height="50" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
