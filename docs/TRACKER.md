@@ -26,7 +26,7 @@ Cassandra Based Systems, Social Media, Video Based Systems, (ungrouped)
 | Broadcasting System | Video Based Systems | not created | 0/10 | Not Started | - | never | TBD — will add in a follow-up step |
 | Zoom | Video Based Systems | not created | 0/10 | Not Started | - | never | TBD — will add in a follow-up step |
 | Youtube | Video Based Systems | not created | 0/10 | Not Started | - | never | TBD — will add in a follow-up step |
-| Movie Ticket Booking | Booking System | not created | 0/10 | Not Started | SQL | never | TBD — will add in a follow-up step |
+| Movie Ticket Booking | Booking System | systems/movie-ticket-booking.md | 10/10 | Deep Dive Ready | SQL, Redis | 2026-08-12 | TBD — will add in a follow-up step |
 | Click Event Aggregator | (ungrouped) | not created | 0/10 | Not Started | - | never | TBD — will add in a follow-up step |
 | Stock Broker | (ungrouped) | not created | 0/10 | Not Started | - | never | TBD — will add in a follow-up step |
 | Notification System | Notification System | not created | 0/10 | Not Started | - | never | TBD — will add in a follow-up step |
@@ -82,18 +82,14 @@ more recently than this concept's Last Reviewed date.
 Cross-session reminders that don't fit the table schema above — check
 before starting a session on the referenced system(s).
 
-- **Movie Ticket Booking**, **Flight Ticket Booking**, **Hotel
-  ReservationSyste**: whichever of these gets designed first (Interview
-  or Learning Mode), the session must include a full, explicit
-  treatment of **Distributed Locking** — not a passing mention or a bare
-  link out to `concepts/distributed-locking.md` (not yet created).
-  Actually explain the whole concept in-session: the seat/room-hold
-  problem (why a plain SQL row lock can't survive the user's think-time
-  across multiple requests during checkout), and the TTL-based external
-  lock that solves it (Redis `SETNX`+expiry, ZooKeeper ephemeral nodes,
-  etc.), including the Redlock/fencing-token failure mode. These three
-  systems were picked specifically as this concept's teaching vehicle
-  because the resource being locked (a specific seat/room) is
-  non-fungible — unlike inventory counters, it can't dodge locking via
-  sharded atomic counters the way `concepts/flash-sale-scaling.md`
-  does. Decided 2026-08-12; still open which of the three is "the" one.
+- ~~**Movie Ticket Booking**, **Flight Ticket Booking**, **Hotel
+  ReservationSyste**: distributed locking deep-dive~~ — **done.** Movie
+  Ticket Booking was built (2026-08-12) with the full treatment in its
+  own section 5: the seat-hold problem, why a plain SQL row lock can't
+  survive checkout think-time, the Redis `SET NX PX` mechanism with the
+  fencing-token gap called out explicitly, and Redlock/ZooKeeper/etcd
+  noted as alternatives with trade-offs. Its interactive trace
+  demonstrates the actual race between two users for one seat. Flight
+  Ticket Booking / Hotel ReservationSyste no longer need this treatment
+  repeated — link back to `systems/movie-ticket-booking.md` §5 instead
+  when they're eventually designed, rather than re-deriving it.

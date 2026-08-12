@@ -1,0 +1,81 @@
+<mxfile host="app.diagrams.net" modified="2026-08-12T00:00:00.000Z" agent="hld-prep" version="24.0.0" type="device">
+  <diagram id="page1-architecture" name="1 - Architecture and Seat Lock">
+    <mxGraphModel dx="1200" dy="700" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="920" pageHeight="340" math="0" shadow="0">
+      <root>
+        <mxCell id="0" /><mxCell id="1" parent="0" />
+        <mxCell id="a-client" value="Client&#10;(web / mobile)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="30" y="130" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="a-booking" value="Booking Service" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="290" y="130" width="170" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="a-redis" value="Redis&#10;lock:seat:{showtimeId}:{seatId}" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="580" y="40" width="240" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="a-sql" value="SQL&#10;showtimes, seat_holds, bookings" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="600" y="210" width="200" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="a-payment" value="Payment Service&#10;(external)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="290" y="250" width="170" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="a-e1" value="hold / confirm / cancel" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=block;endArrow=block;" edge="1" parent="1" source="a-client" target="a-booking">
+          <mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="a-e2" value="SET NX / GET+DEL (lock)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=block;endArrow=block;" edge="1" parent="1" source="a-booking" target="a-redis">
+          <mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="a-e3" value="durable read/write" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=block;endArrow=block;" edge="1" parent="1" source="a-booking" target="a-sql">
+          <mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="a-e4" value="charge on confirm" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=block;endArrow=block;" edge="1" parent="1" source="a-booking" target="a-payment">
+          <mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="a-note" value="The Redis lock is the actual mutual-exclusion mechanism at hold time. Once a booking is CONFIRMED, the seat map reads booking_seats in SQL instead — the lock's job is done." style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;fontSize=12;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="30" y="230" width="230" height="90" as="geometry" /></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <diagram id="page2-state" name="2 - Seat and Booking State">
+    <mxGraphModel dx="1200" dy="700" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="920" pageHeight="360" math="0" shadow="0">
+      <root>
+        <mxCell id="0" /><mxCell id="1" parent="0" />
+        <mxCell id="b-hdr1" value="SEAT (per showtime)" style="text;html=1;fontSize=13;fontStyle=1;align=left;" vertex="1" parent="1">
+          <mxGeometry x="30" y="10" width="220" height="24" as="geometry" /></mxCell>
+        <mxCell id="b-available" value="AVAILABLE" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="30" y="45" width="140" height="50" as="geometry" /></mxCell>
+        <mxCell id="b-held" value="HELD" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fbebd2;strokeColor=#a86a08;" vertex="1" parent="1">
+          <mxGeometry x="220" y="45" width="140" height="50" as="geometry" /></mxCell>
+        <mxCell id="b-booked" value="BOOKED" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="410" y="45" width="140" height="50" as="geometry" /></mxCell>
+        <mxCell id="b-cancelled" value="CANCELLED" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="600" y="45" width="140" height="50" as="geometry" /></mxCell>
+        <mxCell id="b-e1" value="lock acquired" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" edge="1" parent="1" source="b-available" target="b-held">
+          <mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="b-e2" value="confirmed" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" edge="1" parent="1" source="b-held" target="b-booked">
+          <mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="b-e3" value="TTL expires / released" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;exitY=0.7;entryY=0.7;" edge="1" parent="1" source="b-held" target="b-available">
+          <mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="b-e4" value="cancelled / refunded" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" edge="1" parent="1" source="b-booked" target="b-cancelled">
+          <mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="b-e5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" edge="1" parent="1" source="b-cancelled" target="b-available">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="670" y="150" /><mxPoint x="100" y="150" /></Array>
+          </mxGeometry></mxCell>
+
+        <mxCell id="b-hdr2" value="BOOKING" style="text;html=1;fontSize=13;fontStyle=1;align=left;" vertex="1" parent="1">
+          <mxGeometry x="30" y="200" width="220" height="24" as="geometry" /></mxCell>
+        <mxCell id="b-created" value="CREATED" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="30" y="235" width="150" height="50" as="geometry" /></mxCell>
+        <mxCell id="b-pending" value="PENDING_PAYMENT" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fbebd2;strokeColor=#a86a08;" vertex="1" parent="1">
+          <mxGeometry x="230" y="235" width="160" height="50" as="geometry" /></mxCell>
+        <mxCell id="b-confirmed" value="CONFIRMED" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="440" y="235" width="150" height="50" as="geometry" /></mxCell>
+        <mxCell id="b-expired" value="EXPIRED / CANCELLED" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="230" y="320" width="160" height="50" as="geometry" /></mxCell>
+        <mxCell id="b-e6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" edge="1" parent="1" source="b-created" target="b-pending">
+          <mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="b-e7" value="payment succeeds" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" edge="1" parent="1" source="b-pending" target="b-confirmed">
+          <mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="b-e8" value="hold expires / payment fails" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" edge="1" parent="1" source="b-pending" target="b-expired">
+          <mxGeometry relative="1" as="geometry" /></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
