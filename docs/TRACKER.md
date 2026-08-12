@@ -76,3 +76,24 @@ more recently than this concept's Last Reviewed date.
 | Distributed lokcing | Redis | not created | never | Check recommended | TBD — will add in a follow-up step |
 | Gossip Protocol | cassandra | not created | never | Check recommended | TBD — will add in a follow-up step |
 | Flash Sale Scaling (Peak Load) | Redis, SQL — linked to Amazon Order Managment System | concepts/flash-sale-scaling.md | 2026-08-12 | Fresh | TBD — will add in a follow-up step |
+
+## Planning Notes
+
+Cross-session reminders that don't fit the table schema above — check
+before starting a session on the referenced system(s).
+
+- **Movie Ticket Booking**, **Flight Ticket Booking**, **Hotel
+  ReservationSyste**: whichever of these gets designed first (Interview
+  or Learning Mode), the session must include a full, explicit
+  treatment of **Distributed Locking** — not a passing mention or a bare
+  link out to `concepts/distributed-locking.md` (not yet created).
+  Actually explain the whole concept in-session: the seat/room-hold
+  problem (why a plain SQL row lock can't survive the user's think-time
+  across multiple requests during checkout), and the TTL-based external
+  lock that solves it (Redis `SETNX`+expiry, ZooKeeper ephemeral nodes,
+  etc.), including the Redlock/fencing-token failure mode. These three
+  systems were picked specifically as this concept's teaching vehicle
+  because the resource being locked (a specific seat/room) is
+  non-fungible — unlike inventory counters, it can't dodge locking via
+  sharded atomic counters the way `concepts/flash-sale-scaling.md`
+  does. Decided 2026-08-12; still open which of the three is "the" one.
