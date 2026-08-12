@@ -111,6 +111,8 @@ Skip a page if the system genuinely has nothing for it (e.g. no async
 flow, or step 3 concluded no state machine applies — say so instead of
 drawing an empty page). Reference the diagram file's path from the
 relevant section(s) of the system's `.md` file so it's discoverable
+without a separate index. Interview Mode and Implementation Mode do not
+require diagrams unless the user asks.
 
 **Production-quality bar** (learned the hard way — the first pass at
 this was rejected as "not production ready"):
@@ -132,8 +134,51 @@ this was rejected as "not production ready"):
 - **Generous spacing.** No two boxes or labels should be close enough to
   visually collide. When in doubt, make the page bigger, not the nodes
   smaller.
-without a separate index. Interview Mode and Implementation Mode do not
-require diagrams unless the user asks.
+
+## Interactive Trace
+
+An **optional, on-request** deliverable — not part of the default
+Learning Mode output (that's still just the 10 sections + `.drawio`
+diagram). Build one when the user asks for a clickable/interactive
+walkthrough, an "explainer UI," or similar — e.g. "give me an
+interactive trace for Cart," "make this clickable." It's a
+self-contained HTML page that walks one concrete example request hop by
+hop through the system's real topology, showing the exact payload each
+service receives, the SQL it runs, and live state across every table as
+they change.
+
+**File convention:** `systems/implementations/<kebab-case-name>-trace.html`
+(same kebab-case stem as the system), linked from that system's
+`## Implementation Notes` section.
+
+**Build it cheap — copy, don't regenerate:**
+
+1. Copy `systems/implementations/_template/interactive-trace-template.html`
+   to the new path. This template already contains the full working
+   engine (CSS design tokens, diagram highlighting, step/branch state
+   machine, DB-table renderer, controls) — proven in production on the
+   Amazon Order Management System trace. **Never regenerate this engine
+   from scratch per system** — that's the token cost this convention
+   exists to avoid.
+2. Edit ONLY the two blocks marked `SYSTEM DATA — edit this` inside the
+   copy:
+   - the page-head text + the `<svg class="topology">` diagram (system
+     topology genuinely differs per system, so this part is unavoidably
+     bespoke — reuse the same node/edge visual vocabulary described in
+     the template's comments, which already follows the diagram
+     production-quality bar above)
+   - the JS data block: `SEED`, `TABLE_KEYS`, `TABLE_LABEL`,
+     `STATUS_COLORS`, `STEPS`, and optionally `BRANCH` — the template's
+     header comment documents the exact step-object contract
+   Everything below `END SYSTEM DATA` in the script is the generic
+   engine — leave it untouched.
+3. If the engine itself needs a real fix or new capability, fix it once
+   in the template (and only backport to already-generated trace files
+   if the user asks) rather than patching each system's copy separately.
+4. Validate the result renders (structurally check tag balance if unable
+   to open a browser), publish via the Artifact tool for an interactive
+   preview link, link it from the system's `## Implementation Notes`,
+   then run the standard end-of-session pipeline.
 
 ## File Frontmatter Schema
 
@@ -170,7 +215,9 @@ produced or updated a file:
 
 1. Write/update the relevant `.md` file(s) in `systems/` or `concepts/`,
    and for Learning Mode, the `.drawio` diagram file in
-   `systems/diagrams/` (see "Diagrams")
+   `systems/diagrams/` (see "Diagrams"); if an interactive trace was
+   built or updated this session, include its `.html` file in
+   `systems/implementations/` too (see "Interactive Trace")
 2. Update `docs/TRACKER.md` status for that entry
 3. Commit to git with a clear message (e.g. "Cart Service: complete
    sections 1-6, DB choice justified")
