@@ -58,6 +58,11 @@ but fully automated — Claude owns the entire design end-to-end for the
 given system, and explains it in an engaging, easy-to-follow way,
 referencing why each decision was made before moving to the next step.
 
+**Diagrams are mandatory in Learning Mode.** Every Learning Mode session
+must produce or update a draw.io-openable diagram file for the system —
+see "Diagrams" below for format and required pages. This is part of the
+definition of done for the session, same as the 10 sections.
+
 ### 3. Implementation Mode
 
 Not tied to the 10-step framework. Used to explore a specific slice of an
@@ -83,6 +88,31 @@ concept, check that concept's file. If it's missing, stale, or the user
 seems unsure, proactively say so — e.g. "Cart's DB section touches SQL
 row-locking — you haven't reviewed that concept file, want to do a quick
 pass before we continue?" Never force this, just surface it.
+
+## Diagrams
+
+Learning Mode sessions must produce a `.drawio` file (mxGraph XML,
+directly openable in draw.io / diagrams.net) at
+`systems/diagrams/<kebab-case-name>.drawio` — same kebab-case stem as the
+system's `.md` file. Use one multi-page file per system rather than
+separate files per diagram:
+
+- **Page 1 — Service/Component Architecture**: the services involved and
+  the synchronous calls between them (mirrors the "Service Architecture"
+  context in step 1 and the API endpoints in step 4).
+- **Page 2 — Async/Event Flow** (only if the system has one): webhook →
+  event bus → consumer fan-out, or equivalent — whatever the async half
+  of the design actually is.
+- **Page 3 — State Diagram**: a visual version of step 3, boxes and
+  arrows for every state and transition (including any per-entity
+  sub-states, e.g. order vs. line item vs. reservation).
+
+Skip a page if the system genuinely has nothing for it (e.g. no async
+flow, or step 3 concluded no state machine applies — say so instead of
+drawing an empty page). Reference the diagram file's path from the
+relevant section(s) of the system's `.md` file so it's discoverable
+without a separate index. Interview Mode and Implementation Mode do not
+require diagrams unless the user asks.
 
 ## File Frontmatter Schema
 
@@ -117,7 +147,9 @@ notion_url: <url or "TBD">
 At the end of any Interview, Learning, or Implementation session that
 produced or updated a file:
 
-1. Write/update the relevant `.md` file(s) in `systems/` or `concepts/`
+1. Write/update the relevant `.md` file(s) in `systems/` or `concepts/`,
+   and for Learning Mode, the `.drawio` diagram file in
+   `systems/diagrams/` (see "Diagrams")
 2. Update `docs/TRACKER.md` status for that entry
 3. Commit to git with a clear message (e.g. "Cart Service: complete
    sections 1-6, DB choice justified")

@@ -41,6 +41,9 @@ logic, catalog/search.
 
 ### Service Architecture
 
+**Diagram:** `systems/diagrams/amazon-order-management-system.drawio`
+(pages 1–2: sync checkout architecture, async payment/Kafka event flow)
+
 This is not one monolith — it's three services, each with its own
 database, coordinated by a saga:
 
@@ -109,6 +112,10 @@ Client ──(out of band)──▶ Payment Gateway ──(webhook)──▶ Pay
   because payment was abandoned and no webhook ever arrived.
 
 ## 3. State Diagram
+
+**Diagram:** `systems/diagrams/amazon-order-management-system.drawio`
+(page 3: order state, item state, and reservation state, all with
+transitions)
 
 A state machine clearly applies here, at two levels — order and line item
 — because the order's displayed status is *derived* from the aggregate of
