@@ -1,0 +1,38 @@
+<mxfile host="app.diagrams.net" modified="2026-08-12T00:00:00.000Z" agent="hld-prep" version="24.0.0" type="device">
+  <diagram id="page1-strategies" name="1 - Strategies and the Stampede Lock">
+    <mxGraphModel dx="1200" dy="700" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1000" pageHeight="320" math="0" shadow="0">
+      <root>
+        <mxCell id="0" /><mxCell id="1" parent="0" />
+        <mxCell id="a-hdr" value="CACHE-ASIDE (default everywhere else in this repo)" style="text;html=1;fontSize=12;fontStyle=1;align=left;" vertex="1" parent="1">
+          <mxGeometry x="20" y="10" width="400" height="20" as="geometry" /></mxCell>
+        <mxCell id="a-client" value="Service" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="30" y="50" width="150" height="55" as="geometry" /></mxCell>
+        <mxCell id="a-redis" value="Redis" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="230" y="50" width="130" height="55" as="geometry" /></mxCell>
+        <mxCell id="a-db" value="Primary DB&#10;(on miss only)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="410" y="45" width="160" height="65" as="geometry" /></mxCell>
+        <mxCell id="a-e1" value="1. check" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=block;endArrow=block;" edge="1" parent="1" source="a-client" target="a-redis">
+          <mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="a-e2" value="2. on miss" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=block;endArrow=block;" edge="1" parent="1" source="a-client" target="a-db">
+          <mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <mxCell id="b-hdr" value="STAMPEDE PROTECTION — a hot key just expired" style="text;html=1;fontSize=12;fontStyle=1;align=left;" vertex="1" parent="1">
+          <mxGeometry x="20" y="150" width="400" height="20" as="geometry" /></mxCell>
+        <mxCell id="b-r1" value="Request 1&#10;(wins the lock)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="30" y="190" width="150" height="55" as="geometry" /></mxCell>
+        <mxCell id="b-r2" value="Requests 2-500&#10;(wait / serve stale)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fbebd2;strokeColor=#a86a08;" vertex="1" parent="1">
+          <mxGeometry x="30" y="260" width="150" height="55" as="geometry" /></mxCell>
+        <mxCell id="b-lock" value="Redis&#10;lock:repop:{key}&#10;SET NX" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="230" y="220" width="150" height="65" as="geometry" /></mxCell>
+        <mxCell id="b-db" value="Primary DB&#10;(1 query, not 500)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="430" y="190" width="160" height="65" as="geometry" /></mxCell>
+        <mxCell id="b-e1" value="acquires" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" edge="1" parent="1" source="b-r1" target="b-lock">
+          <mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="b-e2" value="repopulates" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" edge="1" parent="1" source="b-r1" target="b-db">
+          <mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="b-e3" value="fails to acquire" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;dashed=1;" edge="1" parent="1" source="b-r2" target="b-lock">
+          <mxGeometry relative="1" as="geometry" /></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
