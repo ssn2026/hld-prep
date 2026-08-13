@@ -41,7 +41,7 @@ Cassandra Based Systems, Social Media, Video Based Systems, (ungrouped)
 | Google Drive | (ungrouped) | systems/google-drive.md | 10/10 | Deep Dive Ready | SQL | 2026-08-12 | TBD — will add in a follow-up step |
 | Redis As cache | (ungrouped) | systems/redis-as-cache.md | 10/10 | Deep Dive Ready | Redis | 2026-08-12 | TBD — will add in a follow-up step |
 | LeaderBoard | (ungrouped) | systems/leaderboard.md | 10/10 | Deep Dive Ready | Redis, SQL | 2026-08-12 | TBD — will add in a follow-up step |
-| Like and Comment Service | Social Media | not created | 0/10 | Service Flow | Redis, cassandra | never | TBD — will add in a follow-up step |
+| Like and Comment Service | Social Media | systems/like-and-comment-service.md | 10/10 | Deep Dive Ready | Redis, cassandra | 2026-08-12 | TBD — will add in a follow-up step |
 | Key Value StoreBa | Simple Cassandra Based Systems | systems/key-value-storeba.md | 10/10 | Deep Dive Ready | cassandra | 2026-08-12 | TBD — will add in a follow-up step |
 | Unique Id Generator | Simple Cassandra Based Systems | systems/unique-id-generator.md | 10/10 | Deep Dive Ready | SQL (see doc — Cassandra deliberately not used) | 2026-08-12 | TBD — will add in a follow-up step |
 | URL Shortner | Simple Cassandra Based Systems | systems/url-shortner.md | 10/10 | Deep Dive Ready | cassandra, Redis | 2026-08-12 | TBD — will add in a follow-up step |
