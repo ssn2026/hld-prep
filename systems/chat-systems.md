@@ -39,8 +39,9 @@ server than the sender, and what happens if they're offline instead
 
 **Out of scope:** detailed presence/last-seen mechanics and the
 connection-registry internals in depth — that's
-`systems/whatsapp-user-socket-info.md`'s job (not yet designed); this
-system gives the essential mechanism it depends on, not the full
+`systems/whatsapp-user-socket-info.md`'s job (now designed, including
+multi-device support this system's simplified version glossed over);
+this system gives the essential mechanism it depends on, not the full
 treatment.
 
 ## 2. Queries in Plain English

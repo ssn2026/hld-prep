@@ -50,7 +50,7 @@ Cassandra Based Systems, Social Media, Video Based Systems, (ungrouped)
 | Proximity ServiceBase | Location Based Systems | systems/proximity-servicebase.md | 10/10 | Deep Dive Ready | SQL | 2026-08-12 | TBD — will add in a follow-up step |
 | News Feeds | Social Media | not created | 0/10 | Service Flow | Redis, cassandra | never | TBD — will add in a follow-up step |
 | Chat Systems | Social Media | systems/chat-systems.md | 10/10 | Deep Dive Ready | cassandra, Redis | 2026-08-12 | TBD — will add in a follow-up step |
-| Whatsapp User Socket info | Social Media | not created | 0/10 | Service Flow | Redis | never | TBD — will add in a follow-up step |
+| Whatsapp User Socket info | Social Media | systems/whatsapp-user-socket-info.md | 10/10 | Deep Dive Ready | Redis | 2026-08-12 | TBD — will add in a follow-up step |
 
 ### Type B — Theory / Concept Notes
 
