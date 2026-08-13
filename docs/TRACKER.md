@@ -38,7 +38,7 @@ Cassandra Based Systems, Social Media, Video Based Systems, (ungrouped)
 | Google Maps | Location Based Systems | systems/google-maps.md | 10/10 | Deep Dive Ready | SQL | 2026-08-12 | TBD — will add in a follow-up step |
 | Digital Wallet | (ungrouped) | systems/digital-wallet.md | 10/10 | Deep Dive Ready | SQL | 2026-08-12 | TBD — will add in a follow-up step |
 | Payment Gateway | (ungrouped) | systems/payment-gateway.md | 10/10 | Deep Dive Ready | SQL | 2026-08-12 | TBD — will add in a follow-up step |
-| Google Drive | (ungrouped) | not created | 0/10 | Not Started | - | never | TBD — will add in a follow-up step |
+| Google Drive | (ungrouped) | systems/google-drive.md | 10/10 | Deep Dive Ready | SQL | 2026-08-12 | TBD — will add in a follow-up step |
 | Redis As cache | (ungrouped) | not created | 0/10 | System Flow | Redis | never | TBD — will add in a follow-up step |
 | LeaderBoard | (ungrouped) | systems/leaderboard.md | 10/10 | Deep Dive Ready | Redis, SQL | 2026-08-12 | TBD — will add in a follow-up step |
 | Like and Comment Service | Social Media | not created | 0/10 | Service Flow | Redis, cassandra | never | TBD — will add in a follow-up step |
