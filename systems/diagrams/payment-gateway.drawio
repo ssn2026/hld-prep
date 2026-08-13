@@ -1,0 +1,33 @@
+<mxfile host="app.diagrams.net" modified="2026-08-12T00:00:00.000Z" agent="hld-prep" version="24.0.0" type="device">
+  <diagram id="page1-failover" name="1 - Safe Processor Failover">
+    <mxGraphModel dx="1200" dy="700" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1000" pageHeight="300" math="0" shadow="0">
+      <root>
+        <mxCell id="0" /><mxCell id="1" parent="0" />
+        <mxCell id="a-client" value="Client" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="30" y="120" width="140" height="60" as="geometry" /></mxCell>
+        <mxCell id="a-gateway" value="Payment Gateway" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="220" y="120" width="180" height="60" as="geometry" /></mxCell>
+        <mxCell id="a-sql" value="SQL: transactions" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="450" y="30" width="180" height="60" as="geometry" /></mxCell>
+        <mxCell id="a-primary" value="Primary Processor&#10;(e.g. Stripe)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="680" y="110" width="180" height="60" as="geometry" /></mxCell>
+        <mxCell id="a-backup" value="Backup Processor" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="680" y="200" width="180" height="60" as="geometry" /></mxCell>
+        <mxCell id="a-e1" value="charge" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=block;endArrow=block;" edge="1" parent="1" source="a-client" target="a-gateway">
+          <mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="a-e2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=block;endArrow=block;" edge="1" parent="1" source="a-gateway" target="a-sql">
+          <mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="a-e3" value="1. attempt" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=block;endArrow=block;" edge="1" parent="1" source="a-gateway" target="a-primary">
+          <mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="a-e4" value="2. on timeout: status check FIRST" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=block;endArrow=block;" edge="1" parent="1" source="a-gateway" target="a-primary">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="650" y="160" /></Array>
+          </mxGeometry></mxCell>
+        <mxCell id="a-e5" value="3. only if confirmed failed" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;dashed=1;" edge="1" parent="1" source="a-gateway" target="a-backup">
+          <mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="a-note" value="A timeout is not a failure -- it's an unknown. Failing over before resolving it risks charging the customer on both processors." style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;fontSize=12;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="30" y="220" width="560" height="50" as="geometry" /></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
