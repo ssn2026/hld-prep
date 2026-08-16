@@ -62,7 +62,7 @@ more recently than this concept's Last Reviewed date.
 
 | Concept Name | Linked Systems (labels) | File | Last Reviewed | Freshness | Notion URL |
 |---|---|---|---|---|---|
-| Cassandra Internals | Database Internals, cassandra | not created | never | Check recommended | TBD — will add in a follow-up step |
+| Cassandra Internals | Database Internals, cassandra | concepts/practice/cassandra-guide.md | 2026-08-16 | Fresh | TBD — will add in a follow-up step |
 | Redis Internals | Database Internals, Redis | not created | never | Check recommended | TBD — will add in a follow-up step |
 | Kafka Internals | Database Internals, Kafka | not created | never | Check recommended | TBD — will add in a follow-up step |
 | Authentication | - | not created | never | Check recommended | TBD — will add in a follow-up step |
@@ -74,7 +74,7 @@ more recently than this concept's Last Reviewed date.
 | 3 phase Commit | SQL | concepts/practice/sql-guide.md#10-three-phase-commit | 2026-08-16 | Fresh | TBD — will add in a follow-up step |
 | SQL Data base locking | SQL | concepts/practice/sql-guide.md#2-pessimistic-locking | 2026-08-16 | Fresh | TBD — will add in a follow-up step |
 | Distributed lokcing | Redis | not created | never | Check recommended | TBD — will add in a follow-up step |
-| Gossip Protocol | cassandra | not created | never | Check recommended | TBD — will add in a follow-up step |
+| Gossip Protocol | cassandra | concepts/practice/cassandra-guide.md#8-token-ring-consistent-hashing--gossip-protocol--unused-at-the-cql-level | 2026-08-16 | Fresh | TBD — will add in a follow-up step |
 | Flash Sale Scaling (Peak Load) | Redis, SQL — linked to Amazon Order Managment System | concepts/flash-sale-scaling.md | 2026-08-12 | Fresh | TBD — will add in a follow-up step |
 
 ## Planning Notes
