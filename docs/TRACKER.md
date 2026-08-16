@@ -64,7 +64,7 @@ more recently than this concept's Last Reviewed date.
 |---|---|---|---|---|---|
 | Cassandra Internals | Database Internals, cassandra | concepts/practice/cassandra-guide.md | 2026-08-16 | Fresh | TBD — will add in a follow-up step |
 | Redis Internals | Database Internals, Redis | concepts/practice/redis-guide.md | 2026-08-16 | Fresh | TBD — will add in a follow-up step |
-| Kafka Internals | Database Internals, Kafka | not created | never | Check recommended | TBD — will add in a follow-up step |
+| Kafka Internals | Database Internals, Kafka | concepts/practice/kafka-guide.md | 2026-08-16 | Fresh | TBD — will add in a follow-up step |
 | Authentication | - | not created | never | Check recommended | TBD — will add in a follow-up step |
 | Load Balancing | - | not created | never | Check recommended | TBD — will add in a follow-up step |
 | Reverse Proxy | - | not created | never | Check recommended | TBD — will add in a follow-up step |
