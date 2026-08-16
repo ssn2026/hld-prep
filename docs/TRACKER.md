@@ -70,9 +70,9 @@ more recently than this concept's Last Reviewed date.
 | Reverse Proxy | - | not created | never | Check recommended | TBD — will add in a follow-up step |
 | Circuit Breaker | - | not created | never | Check recommended | TBD — will add in a follow-up step |
 | SAGA | - | not created | never | Check recommended | TBD — will add in a follow-up step |
-| 2 phase Commit | SQL | not created | never | Check recommended | TBD — will add in a follow-up step |
-| 3 phase Commit | SQL | not created | never | Check recommended | TBD — will add in a follow-up step |
-| SQL Data base locking | SQL | not created | never | Check recommended | TBD — will add in a follow-up step |
+| 2 phase Commit | SQL | concepts/practice/sql-guide.md#9-two-phase-commit | 2026-08-16 | Fresh | TBD — will add in a follow-up step |
+| 3 phase Commit | SQL | concepts/practice/sql-guide.md#10-three-phase-commit | 2026-08-16 | Fresh | TBD — will add in a follow-up step |
+| SQL Data base locking | SQL | concepts/practice/sql-guide.md#2-pessimistic-locking | 2026-08-16 | Fresh | TBD — will add in a follow-up step |
 | Distributed lokcing | Redis | not created | never | Check recommended | TBD — will add in a follow-up step |
 | Gossip Protocol | cassandra | not created | never | Check recommended | TBD — will add in a follow-up step |
 | Flash Sale Scaling (Peak Load) | Redis, SQL — linked to Amazon Order Managment System | concepts/flash-sale-scaling.md | 2026-08-12 | Fresh | TBD — will add in a follow-up step |

@@ -14,7 +14,7 @@ are two distinct content types:
   that get revised over time, and get cross-linked to the Type A systems
   that depend on them.
 
-## The Three Modes
+## The Four Modes
 
 ### 1. Interview Mode
 
@@ -73,6 +73,45 @@ topic." Output can be actual runnable code, request/response payloads, or
 focused explanation — whatever the ask requires. If tied to a system, note
 it in that system's file under a `## Implementation Notes` section (append,
 don't overwrite the 10-step design).
+
+### 4. Practice Mode
+
+Triggered by `/practice`. Unlike the other three modes, this isn't about
+designing a Type A system or writing a Type B concept note — it's a
+self-quiz drill against concepts already established across this repo's
+systems and concepts.
+
+Covers four technologies: SQL, Cassandra, Redis, Kafka. Each gets a pair
+of files under `concepts/practice/`:
+
+- **`<tech>-guide.md`** — the complete reference guide, concept by
+  concept. Doubles as (and gets cross-linked from) the corresponding
+  Type B concept row(s) in `docs/TRACKER.md` where they overlap — e.g.
+  the SQL guide covers what were separately-tracked "SQL Database
+  Locking", "2 Phase Commit", and "3 Phase Commit" rows, plus ground
+  those rows never covered (isolation levels, MVCC, schema-design
+  methodology).
+- **`<tech>-question-bank.md`** — the drill content, organized by
+  concept, each concept holding multiple `{scenario, question, model
+  answer}` problems.
+
+**Progress is persisted as checkboxes inline in the question bank file
+itself** — `[ ] not yet attempted` / `[x] solved <date>` — not a separate
+state file. Resuming `/practice <tech>` finds the first unchecked
+question in document order and continues there; naming a specific
+concept jumps there instead, without marking skipped concepts as done.
+When every checkbox in a bank is checked, that technology's practice is
+complete — the document's completion state *is* the practice's
+completion state.
+
+**Struggling on a question is handled by remediation, not by pushing
+forward.** If an attempt misses the core mechanism, don't mark it
+solved. Walk through the relevant section of that technology's guide
+against the specific miss, insert 1-2 new questions tagged `[remedial]`
+immediately before the struggled-on question in the bank file, work
+through those, then return to the original. Remedial questions get
+written into the file for real — they persist for future sessions too,
+growing the bank rather than being thrown away after one conversation.
 
 ## Type B Concept Notes
 
