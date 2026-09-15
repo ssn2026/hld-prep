@@ -33,6 +33,12 @@ scenario used below wherever a cart-shaped example is needed. If you do
 have a separate cart design elsewhere, point me at it and I'll fold in
 its actual locking choice instead of the constructed example.
 
+**In a hurry, or just want the actionable part?** Skip straight to
+["The Decision Framework"](#the-decision-framework) and
+["The Question Checklist"](#the-question-checklist) near the bottom —
+everything above them is the *why*, which those two sections lean on but
+don't require you to re-derive each time.
+
 ---
 
 ## The core problem: the read-modify-write gap
@@ -496,7 +502,7 @@ truth, and what (if anything) sits in front of it for speed."
 |---|---|---|---|
 | **When lock is taken** | Before the read | Never — checked only at write time | Before the read, but outside any DB transaction |
 | **Scope** | One DB transaction, one row/table | One DB statement | Across requests/services, via an external store (Redis, ZooKeeper, etcd) |
-| **Best contention profile** | High — conflicts expected and frequent | Low-to-moderate — conflicts are the exception | Independent of contention; driven by *duration* (minutes, not milliseconds) |
+| **Real driver for choosing it** | Validity check needs multiple rows/steps that can't collapse into one predicate | Validity check *can* collapse into one atomic predicate — wins even under high contention, since the lock is held for one statement, not a round-trip | Duration (spans requests/think-time), not contention |
 | **Failure mode under high contention** | Queued waiters, possible deadlock | Retry storm | Same TTL-expiry gap regardless of contention level |
 | **Survives process/service restart** | N/A (transaction-scoped) | N/A (transaction-scoped) | No, unless paired with durable state |
 | **Needs explicit conflict handling in app code** | No (DB blocks for you) | Yes (retry loop on 0-rows) | Yes (TTL, fencing token, rollback-on-partial-failure) |
@@ -504,47 +510,213 @@ truth, and what (if anything) sits in front of it for speed."
 
 ---
 
-## Decision Framework
+## The Decision Framework
 
-Walk these questions in order:
+**The one correction that matters most, before anything else:**
+**contention level (how many people are fighting over the resource) is
+NOT the primary question.** It's tempting to think "high contention →
+need a real lock (pessimistic)," but that's backwards for the single most
+common interview scenario — "availability = 1, don't let 2 people get
+it." That problem is *maximum* contention and the right answer is still
+optimistic (an atomic conditional update), not pessimistic. The real
+first question is about **duration** (does the hold outlive one
+transaction?), and the second is about **shape** of the validity check
+(does it collapse into one predicate?) — contention only re-enters at
+the very end, as a scale question, not a mechanism question.
 
-1. **Does the exclusive hold need to outlive a single database
-   transaction** (spans multiple HTTP requests, minutes of user
-   think-time, or multiple service instances)?
-   - **Yes** → you need something outside plain SQL locking. Go to 4.
-   - **No** → stay inside one transaction, go to 2.
+Ask these in order. Every problem below resolves in 2–4 questions.
 
-2. **Is contention on this resource expected to be high and frequent**
-   (a genuinely hot row — last unit of a viral SKU, a popular seat)?
-   - **Yes** → pessimistic (`FOR UPDATE`), *if* the critical section is
-     short and single-transaction. If it's still too hot even under
-     `FOR UPDATE` (thousands of concurrent holders on one row), you've
-     outgrown plain SQL locking entirely — see [[flash-sale-scaling]].
-   - **No** → optimistic. Go to 3.
+**Q1 — Does the exclusive access need to outlive a single database
+transaction?** (Does it span multiple HTTP requests, minutes of user
+think-time, or coordination across more than one service?)
+- **No** → stay inside one DB transaction → go to **Q2**.
+- **Yes** → you're past what plain SQL locking can do → go to **Q3**.
 
-3. **Does a single atomic conditional `UPDATE ... WHERE <invariant>`
-   fully express the check you need** (a numeric threshold, an expected
-   prior state)?
-   - **Yes** → atomic conditional update (2b) — no version column
-     needed, this is the leanest option and what your Inventory Service
-     correctly reaches for by default.
-   - **No** (the valid-transition logic is more complex than one
-     predicate) → explicit `version` column (2a), as your Order Service
-     uses for its state machine.
+**Q2 — (inside one transaction) Can "is this still valid?" be fully
+expressed as ONE atomic conditional statement** — a single `WHERE`
+predicate against the row(s) you're about to write (a numeric threshold,
+an expected prior state)?
+- **Yes** → **optimistic locking (atomic conditional `UPDATE`)**. This
+  holds *regardless of how contended the row is* — the row lock Postgres
+  takes internally lasts only for that one statement, not for a
+  round-trip to the application and back, so it comfortably outperforms
+  pessimistic locking even at extreme contention. This is why your
+  Inventory Service reaches for it as the *primary* choice for "no two
+  people get the last unit," not the fallback.
+- **No** (validity depends on multiple rows, or business logic that
+  can't collapse into one predicate — e.g. "check balance AND daily
+  limit AND overdraft policy across two accounts before writing either")
+  → **pessimistic locking (`FOR UPDATE`)**, always acquiring every lock
+  in a fixed, global order (e.g. ascending `account_id`) to avoid
+  deadlock.
+- **Side note, not a fork in the tree:** if you answered "yes" here and
+  contention is *still* extreme in practice (tens of thousands of
+  concurrent writers on the literal same row — a viral flash-sale SKU),
+  that's not a reason to switch to pessimistic (which would be worse,
+  not better). It's a separate scale problem — shard the hot counter or
+  move it off SQL entirely onto something faster (Redis atomic `DECR`),
+  reconciled back to the durable store. See [[flash-sale-scaling]].
 
-4. **Does the hold itself need to be a durable, auditable business
-   record** (tied to a real order/booking, needs to survive a crash, or
-   feeds a saga's compensation logic)?
-   - **Yes** → don't reach for a bare lock. Model it as durable state:
-     a `status` column + `expires_at` + a reconciliation worker that
-     verifies current state before acting — your Inventory Service's
-     `HELD`/reservation design.
-   - **No** (losing the hold on infra failure is an acceptable, cheap
-     failure — a seat just reopens) → distributed lock, `SET NX PX` +
-     compare-and-delete release + fencing token at the downstream write.
-     Decompose the resource into fine-grained keys (per-seat, per-night)
-     so contention stays local, following Movie Ticket Booking / Hotel
-     Reservation.
+**Q3 — (beyond one transaction) Does the hold itself need to be a
+durable, auditable business record** — survive a crash/restart, stay
+visible to other services, feed a saga's compensation logic, or be
+queryable by a reconciliation job?
+- **Yes** → **don't use a lock at all.** Model it as durable state: a
+  `status` column + `expires_at` on a real row, swept by a
+  reconciliation worker that verifies current state before acting —
+  your Inventory Service's `HELD`-reservation design.
+- **No** (losing the hold on infrastructure failure is a cheap,
+  acceptable outcome — a seat just reopens) → **distributed lock**:
+  `SET NX PX` to acquire, compare-and-delete to release, a **fencing
+  token** checked at the actual downstream write → go to **Q4**.
+
+**Q4 — (only if Q3 said distributed lock) Does the resource decompose
+into a range or set of sub-resources, rather than one single key?**
+- **Yes** → acquire one lock per sub-resource (one key per seat, per
+  room-night, per time slot), attempt-all-atomically, roll back whatever
+  succeeded if any one fails.
+- **No** → a single lock key is enough.
+
+---
+
+## Five Worked Problems
+
+Each one walks the framework above, question by question, to a final
+answer.
+
+### Problem 1 — Amazon Inventory: "availability = 1, two customers must not both get it"
+
+This is your own example, and the one most people instinctively route to
+the wrong bucket.
+
+- **Q1:** Does the exclusive access need to outlive one transaction? No
+  — checking stock and decrementing it is one immediate operation
+  triggered by a single request. There's no user think-time *before*
+  this specific check. → Go to Q2.
+- **Q2:** Does one atomic predicate fully express validity? Yes:
+  `available_qty >= 1`.
+- **Answer: Optimistic locking (atomic conditional update).**
+  ```sql
+  UPDATE inventory SET available_qty = available_qty - 1
+  WHERE product_id = ? AND available_qty >= 1;
+  -- 0 rows affected = sold out
+  ```
+  This is exactly your `01 - Inventory Service` §9 decision, and it's
+  correct *even though this is the highest-contention scenario in this
+  whole note* — see the Q2 side-note above for why "high contention"
+  didn't push this toward pessimistic.
+
+### Problem 2 — Amazon Cart/Checkout: the reservation has to survive the customer entering payment details
+
+- **Q1:** Does it outlive one transaction? Yes — the customer might take
+  minutes between "add to cart"/checkout and completing payment; this
+  spans multiple requests. → Go to Q3.
+- **Q3:** Does the hold need to be a durable, auditable record? Yes —
+  it's tied to a real order, the checkout saga needs to compensate
+  (release) other items' reservations if one item fails, and an
+  abandoned-payment recovery job needs to query "what's currently
+  `HELD`."
+- **Answer: Durable state, not a lock at all.** An
+  `inventory_reservations` row: `status = HELD`, `expires_at`, released
+  by a reconciliation reaper — your `01 - Inventory Service` §17,
+  reused unchanged in this repo's `amazon-order-management-system.md`.
+  Notice there is no Redis lock anywhere in this flow — the "lock" *is*
+  the reservation row's status.
+
+### Problem 3 — Movie Ticket Booking: two users click the same seat
+
+- **Q1:** Does it outlive one transaction? Yes — the hold has to survive
+  the user entering payment details, potentially minutes. → Go to Q3.
+- **Q3:** Does the hold need to be a durable, auditable record? No —
+  losing the hold to a Redis outage just reopens the seat; there's no
+  saga to compensate and no independent audit requirement (the audit
+  trail — `booking_seats` — is created on confirm, not on hold).
+- **Q4:** Does the resource decompose into sub-resources? No — one seat
+  is one key.
+- **Answer: Distributed lock, single key.**
+  `lock:seat:{showtimeId}:{seatId}`, `SET NX PX`, compare-and-delete
+  release, fencing token checked at the confirm-time SQL insert —
+  `movie-ticket-booking.md` §5.
+
+### Problem 4 — Hotel Reservation: two users book overlapping date ranges
+
+- **Q1:** Outlives one transaction? Yes, same think-time reasoning as
+  the seat hold. → Go to Q3.
+- **Q3:** Durable/auditable? No, same reasoning as Problem 3.
+- **Q4:** Does the resource decompose into sub-resources? Yes — a
+  multi-night stay is a *set* of individual nights, not one key.
+- **Answer: Distributed lock, decomposed per sub-resource.**
+  `lock:room:{roomId}:{date}`, one key per night in the stay,
+  attempt-all-atomically, roll back whatever succeeded if any night
+  fails — `hotel-reservation-system.md` §5. This is also what correctly
+  handles partial-overlap (Aug 15–18 vs Aug 17–20 only contend on the
+  shared night, Aug 17) without a purpose-built range-lock primitive.
+
+### Problem 5 — Digital Wallet: transfer between two accounts
+
+- **Q1:** Does it outlive one transaction? No — a transfer is a single
+  synchronous operation; both accounts' balances are available
+  immediately, no user think-time between "check" and "write." → Go to
+  Q2.
+- **Q2:** Does one atomic predicate fully express validity? No — the
+  operation has to check *and* update two different rows consistently
+  (debit account A, credit account B), and real business rules (daily
+  transfer limits, overdraft policy) don't reduce to a single threshold
+  on a single row the way "qty >= 1" does.
+- **Answer: Pessimistic locking (`FOR UPDATE`).**
+  ```sql
+  BEGIN;
+  SELECT balance FROM accounts WHERE account_id IN (?, ?) ORDER BY account_id FOR UPDATE;
+  -- ascending account_id order, always — this is what prevents deadlock
+  -- ... check balance/limits, decide ...
+  UPDATE accounts SET balance = balance - ? WHERE account_id = ?; -- sender
+  UPDATE accounts SET balance = balance + ? WHERE account_id = ?; -- receiver
+  COMMIT;
+  ```
+  `digital-wallet.md`'s transfer flow, locking accounts in a fixed
+  ascending order specifically so two transfers moving money in
+  opposite directions between the same pair of accounts can't deadlock.
+
+| Problem | Q1: outlives 1 txn? | Q2/Q3 answer | Q4 | **Mechanism** |
+|---|---|---|---|---|
+| 1. Inventory reserve (qty=1) | No | Q2: one predicate suffices | — | **Optimistic** |
+| 2. Cart/checkout hold | Yes | Q3: needs durable/auditable record | — | **Durable state (no lock)** |
+| 3. Movie seat hold | Yes | Q3: no durable record needed | No decomposition | **Distributed, single key** |
+| 4. Hotel date-range hold | Yes | Q3: no durable record needed | Decomposes per-night | **Distributed, per sub-resource** |
+| 5. Wallet transfer | No | Q2: needs multi-row/multi-rule logic | — | **Pessimistic** |
+
+---
+
+## The Question Checklist
+
+Print this part. No explanation, just the questions, in order:
+
+1. **Does the exclusive access need to outlive a single database
+   transaction** (multiple requests, minutes of user think-time, or
+   more than one service)?
+   - No → Q2. Yes → Q3.
+2. **Can validity collapse into ONE atomic conditional statement** (a
+   single `WHERE` predicate)?
+   - Yes → **Optimistic** (atomic conditional update). Done.
+   - No → **Pessimistic** (`FOR UPDATE`, fixed global lock order). Done.
+3. **Does the hold need to be a durable, auditable business record**
+   (survive a crash, feed a saga, be queryable by reconciliation)?
+   - Yes → **Durable state** (`status` + `expires_at` + reconciler, no
+     lock at all). Done.
+   - No → **Distributed lock** (`SET NX PX` + compare-and-delete +
+     fencing token). Go to Q4.
+4. **Does the locked resource decompose into a range/set of
+   sub-resources** rather than one key?
+   - Yes → one lock per sub-resource, attempt-all, roll back on partial
+     failure.
+   - No → single lock key.
+
+And the one myth to actively unlearn: **"high contention" alone never
+points you at pessimistic locking.** It only matters at Q2, and even
+there the deciding factor is whether the validity check is a single
+predicate — not how many people are racing for it. Problem 1 above
+(availability = 1) is proof: maximum possible contention, and the
+correct answer is still optimistic.
 
 ---
 
