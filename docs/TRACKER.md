@@ -77,6 +77,7 @@ more recently than this concept's Last Reviewed date.
 | Gossip Protocol | cassandra | concepts/practice/cassandra-guide.md#8-token-ring-consistent-hashing--gossip-protocol--unused-at-the-cql-level | 2026-08-16 | Fresh | TBD — will add in a follow-up step |
 | Flash Sale Scaling (Peak Load) | Redis, SQL — linked to Amazon Order Managment System | concepts/flash-sale-scaling.md | 2026-08-12 | Fresh | TBD — will add in a follow-up step |
 | Locking (Optimistic / Pessimistic / Distributed) | SQL, Redis — linked to Amazon Order Managment System, Hotel ReservationSyste, Movie Ticket Booking, Digital Wallet, Flight Ticket Booking, Doctor Appointment | concepts/locking.md | 2026-09-15 | Fresh | TBD — will add in a follow-up step |
+| Two-Phase Commit & Three-Phase Commit | SQL — linked to Amazon Order Managment System, Movie Ticket Booking, Hotel ReservationSyste, Digital Wallet | concepts/two-phase-three-phase-commit.md | 2026-09-15 | Fresh | TBD — will add in a follow-up step |
 
 ## Planning Notes
 
